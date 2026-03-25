@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>猜数字</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 500px;
+            width: 90%;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .instruction {
+            font-size: 1.2rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        .input-area {
+            margin-bottom: 30px;
+        }
+        input[type="number"] {
+            padding: 15px;
+            font-size: 1.5rem;
+            width: 200px;
+            text-align: center;
+            border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 10px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            margin-right: 10px;
+        }
+        input[type="number"]::placeholder {
+            color: rgba(255,255,255,0.5);
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 1.2rem;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 10px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        .hint {
+            font-size: 1.5rem;
+            margin: 30px 0;
+            min-height: 40px;
+            font-weight: bold;
+        }
+        .attempts {
+            font-size: 1rem;
+            margin-bottom: 20px;
+            opacity: 0.8;
+        }
+        .result {
+            font-size: 1.3rem;
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            display: none;
+        }
+        .result.show {
+            display: block;
+        }
+        .new-game {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>猜数字</h1>
+        <div class="instruction">猜一个1到100之间的数字</div>
+        <div class="attempts">尝试次数: <span id="attempts">0</span></div>
+        <div class="input-area">
+            <input type="number" id="guessInput" min="1" max="100" placeholder="输入数字">
+            <button id="guessBtn">猜!</button>
+        </div>
+        <div class="hint" id="hint"></div>
+        <div class="result" id="result"></div>
+        <button class="new-game" id="newGameBtn">新游戏</button>
+    </div>
+
+    <script>
+        let targetNumber;
+        let attempts;
+        let gameOver;
+        
+        const guessInput = document.getElementById('guessInput');
+        const guessBtn = document.getElementById('guessBtn');
+        const newGameBtn = document.getElementById('newGameBtn');
+        const hintDisplay = document.getElementById('hint');
+        const attemptsDisplay = document.getElementById('attempts');
+        const resultDisplay = document.getElementById('result');
+        
+        function initGame() {
+            targetNumber = Math.floor(Math.random() * 100) + 1;
+            attempts = 0;
+            gameOver = false;
+            
+            guessInput.value = '';
+            guessInput.disabled = false;
+            guessBtn.disabled = false;
+            hintDisplay.textContent = '';
+            attemptsDisplay.textContent = attempts;
+            resultDisplay.classList.remove('show');
+            guessInput.focus();
+        }
+        
+        function checkGuess() {
+            if (gameOver) return;
+            
+            const guess = parseInt(guessInput.value);
+            
+            if (isNaN(guess) || guess < 1 || guess > 100) {
+                hintDisplay.textContent = '请输入1到100之间的数字!';
+                hintDisplay.style.color = '#ff6b6b';
+                return;
+            }
+            
+            attempts++;
+            attemptsDisplay.textContent = attempts;
+            
+            if (guess === targetNumber) {
+                gameOver = true;
+                hintDisplay.textContent = '正确!';
+                hintDisplay.style.color = '#51cf66';
+                resultDisplay.textContent = `恭喜! 你用了 ${attempts} 次猜中了数字 ${targetNumber}!`;
+                resultDisplay.classList.add('show');
+                guessInput.disabled = true;
+                guessBtn.disabled = true;
+            } else if (guess < targetNumber) {
+                hintDisplay.textContent = '太小了! 往大猜!';
+                hintDisplay.style.color = '#ffd43b';
+            } else {
+                hintDisplay.textContent = '太大了! 往小猜!';
+                hintDisplay.style.color = '#ffd43b';
+            }
+            
+            guessInput.value = '';
+            guessInput.focus();
+        }
+        
+        guessBtn.addEventListener('click', checkGuess);
+        newGameBtn.addEventListener('click', initGame);
+        
+        guessInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkGuess();
+            }
+        });
+        
+        // 初始化游戏
+        initGame();
+    </script>
+</body>
+</html>

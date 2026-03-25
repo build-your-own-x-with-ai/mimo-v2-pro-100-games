@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>井字棋</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            padding: 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 500px;
+            width: 90%;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .status {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            min-height: 40px;
+        }
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 30px;
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .cell {
+            aspect-ratio: 1;
+            background: rgba(255,255,255,0.3);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 3rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        .cell:hover {
+            background: rgba(255,255,255,0.5);
+            transform: scale(1.05);
+        }
+        .cell.x {
+            color: #e74c3c;
+        }
+        .cell.o {
+            color: #3498db;
+        }
+        .cell.winner {
+            background: rgba(81, 207, 102, 0.5);
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        button {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 30px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+        button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        .score {
+            font-size: 1.2rem;
+            margin-top: 20px;
+            opacity: 0.9;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>井字棋</h1>
+        <div class="status" id="status">玩家 X 的回合</div>
+        <div class="game-board" id="gameBoard"></div>
+        <button id="newGameBtn">新游戏</button>
+        <div class="score">
+            X 胜: <span id="xScore">0</span> | O 胜: <span id="oScore">0</span> | 平局: <span id="drawScore">0</span>
+        </div>
+    </div>
+
+    <script>
+        let board = ['', '', '', '', '', '', '', '', ''];
+        let currentPlayer = 'X';
+        let gameActive = true;
+        let xScore = 0;
+        let oScore = 0;
+        let drawScore = 0;
+        
+        const gameBoard = document.getElementById('gameBoard');
+        const statusDisplay = document.getElementById('status');
+        const xScoreDisplay = document.getElementById('xScore');
+        const oScoreDisplay = document.getElementById('oScore');
+        const drawScoreDisplay = document.getElementById('drawScore');
+        const newGameBtn = document.getElementById('newGameBtn');
+        
+        const winningConditions = [
+            [0, 1, 2], [3, 4, 5], [6, 7, 8], // 横向
+            [0, 3, 6], [1, 4, 7], [2, 5, 8], // 纵向
+            [0, 4, 8], [2, 4, 6] // 对角线
+        ];
+        
+        function initGame() {
+            board = ['', '', '', '', '', '', '', '', ''];
+            currentPlayer = 'X';
+            gameActive = true;
+            
+            statusDisplay.textContent = `玩家 ${currentPlayer} 的回合`;
+            
+            renderBoard();
+        }
+        
+        function renderBoard() {
+            gameBoard.innerHTML = '';
+            
+            board.forEach((cell, index) => {
+                const cellElement = document.createElement('div');
+                cellElement.className = 'cell';
+                cellElement.dataset.index = index;
+                
+                if (cell) {
+                    cellElement.textContent = cell;
+                    cellElement.classList.add(cell.toLowerCase());
+                }
+                
+                cellElement.addEventListener('click', () => makeMove(index));
+                
+                gameBoard.appendChild(cellElement);
+            });
+        }
+        
+        function makeMove(index) {
+            if (!gameActive || board[index]) return;
+            
+            board[index] = currentPlayer;
+            renderBoard();
+            
+            if (checkWin()) {
+                gameActive = false;
+                statusDisplay.textContent = `玩家 ${currentPlayer} 获胜!`;
+                
+                if (currentPlayer === 'X') {
+                    xScore++;
+                    xScoreDisplay.textContent = xScore;
+                } else {
+                    oScore++;
+                    oScoreDisplay.textContent = oScore;
+                }
+                
+                highlightWinningCells();
+            } else if (board.every(cell => cell)) {
+                gameActive = false;
+                statusDisplay.textContent = '平局!';
+                drawScore++;
+                drawScoreDisplay.textContent = drawScore;
+            } else {
+                currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+                statusDisplay.textContent = `玩家 ${currentPlayer} 的回合`;
+            }
+        }
+        
+        function checkWin() {
+            return winningConditions.some(condition => {
+                const [a, b, c] = condition;
+                return board[a] && board[a] === board[b] && board[a] === board[c];
+            });
+        }
+        
+        function highlightWinningCells() {
+            winningConditions.forEach(condition => {
+                const [a, b, c] = condition;
+                if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+                    document.querySelector(`.cell[data-index="${a}"]`).classList.add('winner');
+                    document.querySelector(`.cell[data-index="${b}"]`).classList.add('winner');
+                    document.querySelector(`.cell[data-index="${c}"]`).classList.add('winner');
+                }
+            });
+        }
+        
+        newGameBtn.addEventListener('click', initGame);
+        
+        // 初始化游戏
+        initGame();
+    </script>
+</body>
+</html>

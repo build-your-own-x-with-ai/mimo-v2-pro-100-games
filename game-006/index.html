@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>滑块拼图</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            padding: 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 500px;
+            width: 90%;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            font-size: 1.2rem;
+        }
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 5px;
+            margin-bottom: 30px;
+            background: rgba(255,255,255,0.2);
+            padding: 10px;
+            border-radius: 10px;
+        }
+        .tile {
+            aspect-ratio: 1;
+            background: rgba(255,255,255,0.3);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: #333;
+            user-select: none;
+        }
+        .tile:hover {
+            background: rgba(255,255,255,0.5);
+            transform: scale(1.05);
+        }
+        .tile.empty {
+            background: rgba(255,255,255,0.1);
+            cursor: default;
+        }
+        .tile.empty:hover {
+            transform: none;
+        }
+        .tile[data-value="1"] { background: #e74c3c; color: white; }
+        .tile[data-value="2"] { background: #3498db; color: white; }
+        .tile[data-value="3"] { background: #2ecc71; color: white; }
+        .tile[data-value="4"] { background: #f39c12; color: white; }
+        .tile[data-value="5"] { background: #9b59b6; color: white; }
+        .tile[data-value="6"] { background: #1abc9c; color: white; }
+        .tile[data-value="7"] { background: #e67e22; color: white; }
+        .tile[data-value="8"] { background: #34495e; color: white; }
+        .tile[data-value="9"] { background: #c0392b; color: white; }
+        .tile[data-value="10"] { background: #2980b9; color: white; }
+        .tile[data-value="11"] { background: #27ae60; color: white; }
+        .tile[data-value="12"] { background: #f1c40f; color: white; }
+        .tile[data-value="13"] { background: #8e44ad; color: white; }
+        .tile[data-value="14"] { background: #16a085; color: white; }
+        .tile[data-value="15"] { background: #d35400; color: white; }
+        button {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 30px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        .message {
+            font-size: 1.3rem;
+            margin-top: 20px;
+            min-height: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>滑块拼图</h1>
+        <div class="stats">
+            <div>步数: <span id="moves">0</span></div>
+            <div>时间: <span id="timer">00:00</span></div>
+        </div>
+        <div class="game-board" id="gameBoard"></div>
+        <button id="newGameBtn">新游戏</button>
+        <div class="message" id="message"></div>
+    </div>
+
+    <script>
+        let tiles = [];
+        let emptyIndex = 15;
+        let moves = 0;
+        let timerInterval = null;
+        let seconds = 0;
+        let gameWon = false;
+        
+        const gameBoard = document.getElementById('gameBoard');
+        const movesDisplay = document.getElementById('moves');
+        const timerDisplay = document.getElementById('timer');
+        const messageDisplay = document.getElementById('message');
+        const newGameBtn = document.getElementById('newGameBtn');
+        
+        function initGame() {
+            // 创建1-15的数字和一个空格
+            tiles = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 0];
+            emptyIndex = 15;
+            moves = 0;
+            seconds = 0;
+            gameWon = false;
+            
+            movesDisplay.textContent = moves;
+            timerDisplay.textContent = '00:00';
+            messageDisplay.textContent = '';
+            
+            // 打乱拼图
+            shuffleTiles();
+            
+            // 开始计时
+            startTimer();
+            
+            // 渲染游戏板
+            renderBoard();
+        }
+        
+        function shuffleTiles() {
+            // 执行随机移动来打乱拼图
+            for (let i = 0; i < 100; i++) {
+                const possibleMoves = getPossibleMoves();
+                const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+                swapTiles(randomMove);
+            }
+            
+            // 重置移动计数
+            moves = 0;
+            movesDisplay.textContent = moves;
+        }
+        
+        function getPossibleMoves() {
+            const moves = [];
+            const row = Math.floor(emptyIndex / 4);
+            const col = emptyIndex % 4;
+            
+            if (row > 0) moves.push(emptyIndex - 4); // 上
+            if (row < 3) moves.push(emptyIndex + 4); // 下
+            if (col > 0) moves.push(emptyIndex - 1); // 左
+            if (col < 3) moves.push(emptyIndex + 1); // 右
+            
+            return moves;
+        }
+        
+        function swapTiles(index) {
+            [tiles[emptyIndex], tiles[index]] = [tiles[index], tiles[emptyIndex]];
+            emptyIndex = index;
+        }
+        
+        function renderBoard() {
+            gameBoard.innerHTML = '';
+            
+            tiles.forEach((tile, index) => {
+                const tileElement = document.createElement('div');
+                tileElement.className = 'tile';
+                tileElement.dataset.index = index;
+                
+                if (tile === 0) {
+                    tileElement.classList.add('empty');
+                } else {
+                    tileElement.textContent = tile;
+                    tileElement.dataset.value = tile;
+                    tileElement.addEventListener('click', () => moveTile(index));
+                }
+                
+                gameBoard.appendChild(tileElement);
+            });
+        }
+        
+        function moveTile(index) {
+            if (gameWon) return;
+            
+            const row = Math.floor(index / 4);
+            const col = index % 4;
+            const emptyRow = Math.floor(emptyIndex / 4);
+            const emptyCol = emptyIndex % 4;
+            
+            // 检查是否相邻
+            const isAdjacent = (Math.abs(row - emptyRow) === 1 && col === emptyCol) ||
+                             (Math.abs(col - emptyCol) === 1 && row === emptyRow);
+            
+            if (isAdjacent) {
+                swapTiles(index);
+                moves++;
+                movesDisplay.textContent = moves;
+                renderBoard();
+                
+                // 检查是否获胜
+                checkWin();
+            }
+        }
+        
+        function checkWin() {
+            for (let i = 0; i < 15; i++) {
+                if (tiles[i] !== i + 1) return;
+            }
+            
+            // 检查最后一个是否是空格
+            if (tiles[15] === 0) {
+                gameWon = true;
+                clearInterval(timerInterval);
+                messageDisplay.textContent = `恭喜! 你用了 ${moves} 步完成了拼图!`;
+            }
+        }
+        
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            seconds = 0;
+            
+            timerInterval = setInterval(() => {
+                seconds++;
+                const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+                const secs = (seconds % 60).toString().padStart(2, '0');
+                timerDisplay.textContent = `${mins}:${secs}`;
+            }, 1000);
+        }
+        
+        newGameBtn.addEventListener('click', initGame);
+        
+        // 初始化游戏
+        initGame();
+    </script>
+</body>
+</html>

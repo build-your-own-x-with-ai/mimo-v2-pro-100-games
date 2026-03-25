@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>扫雷</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:Arial; background:linear-gradient(135deg,#667eea,#764ba2); min-height:100vh; display:flex; justify-content:center; align-items:center; color:white; }
+        .container { text-align:center; padding:30px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:500px; width:90%; }
+        h1 { font-size:2rem; margin-bottom:15px; }
+        .game-area { min-height:200px; background:rgba(255,255,255,0.2); border-radius:10px; padding:20px; margin:20px 0; }
+        button { padding:12px 30px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:25px; color:white; cursor:pointer; margin:5px; }
+        button:hover { background:rgba(255,255,255,0.3); }
+        .message { font-size:1.2rem; margin-top:15px; min-height:25px; color:#51cf66; }
+        .score { font-size:1rem; margin-bottom:10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>扫雷</h1>
+        <div class="score">分数: <span id="score">0</span></div>
+        <div class="game-area">
+            <p>找出所有地雷而不踩到它们</p>
+            
+        <div id="minefield" style="display:grid;grid-template-columns:repeat(8,30px);gap:1px;"></div>
+        <p style="margin-top:10px;">左键点击揭示，右键标记地雷</p>
+    
+        </div>
+        <button onclick="location.reload()">重新开始</button>
+        <div class="message" id="message"></div>
+    </div>
+    <script>
+        let score = 0;
+        const messageDisplay = document.getElementById('message');
+        const scoreDisplay = document.getElementById('score');
+        
+        const size = 8, mines = 10;
+        let field = Array(size).fill().map(() => Array(size).fill(0));
+        let revealed = Array(size).fill().map(() => Array(size).fill(false));
+        let flagged = Array(size).fill().map(() => Array(size).fill(false));
+        
+        // 放置地雷
+        for(let i=0;i<mines;i++) {
+            let r,c;
+            do { r=Math.floor(Math.random()*size); c=Math.floor(Math.random()*size); } while(field[r][c]===-1);
+            field[r][c] = -1;
+        }
+        
+        // 计算数字
+        for(let r=0;r<size;r++) for(let c=0;c<size;c++) {
+            if(field[r][c]===-1) continue;
+            for(let dr=-1;dr<=1;dr++) for(let dc=-1;dc<=1;dc++) {
+                const nr=r+dr, nc=c+dc;
+                if(nr>=0&&nr<size&&nc>=0&&nc<size&&field[nr][nc]===-1) field[r][c]++;
+            }
+        }
+        
+        function render() {
+            const mf = document.getElementById('minefield');
+            mf.innerHTML = '';
+            for(let r=0;r<size;r++) for(let c=0;c<size;c++) {
+                const cell = document.createElement('div');
+                cell.style.cssText = `width:30px;height:30px;background:${revealed[r][c]?'#ecf0f1':'#7f8c8d'};display:flex;align-items:center;justify-content:center;font-weight:bold;cursor:pointer;`;
+                if(revealed[r][c]) {
+                    cell.textContent = field[r][c]===-1?'💣':field[r][c]||'';
+                    cell.style.color = ['#3498db','#2ecc71','#e74c3c','#9b59b6','#f39c12','#1abc9c','#34495e','#c0392b'][field[r][c]]||'';
+                } else if(flagged[r][c]) cell.textContent = '🚩';
+                cell.addEventListener('click', () => {
+                    if(field[r][c]===-1) { messageDisplay.textContent = '踩到地雷了!'; return; }
+                    revealed[r][c]=true; render();
+                });
+                cell.addEventListener('contextmenu', e => { e.preventDefault(); flagged[r][c]=!flagged[r][c]; render(); });
+                mf.appendChild(cell);
+            }
+        }
+        render();
+    
+    </script>
+</body>
+</html>

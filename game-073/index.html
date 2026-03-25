@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>打砖块</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:Arial; background:linear-gradient(135deg,#667eea,#764ba2); min-height:100vh; display:flex; justify-content:center; align-items:center; color:white; }
+        .container { text-align:center; padding:20px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:600px; width:95%; }
+        h1 { font-size:1.8rem; margin-bottom:10px; }
+        .game-area { min-height:300px; background:rgba(0,0,0,0.3); border-radius:10px; padding:15px; margin:15px 0; }
+        canvas { display:block; margin:0 auto; background:#1a1a2e; border-radius:5px; }
+        button { padding:10px 25px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
+        button:hover { background:rgba(255,255,255,0.3); }
+        .message { font-size:1.1rem; margin-top:10px; min-height:20px; }
+        .score { font-size:0.9rem; margin-bottom:10px; }
+        .controls { margin-top:10px; }
+        .ctrl-btn { width:50px; height:50px; font-size:1.5rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>打砖块</h1>
+        <div class="score">分数: <span id="score">0</span> | 最高分: <span id="best">0</span></div>
+        <div class="game-area">
+            <canvas id="gameCanvas" width="400" height="300"></canvas>
+        </div>
+        <div class="controls">
+            <button class="ctrl-btn" id="leftBtn">←</button>
+            <button class="ctrl-btn" id="upBtn">↑</button>
+            <button class="ctrl-btn" id="downBtn">↓</button>
+            <button class="ctrl-btn" id="rightBtn">→</button>
+            <button class="ctrl-btn" id="fireBtn">射击</button>
+        </div>
+        <button id="startBtn">开始游戏</button>
+        <div class="message" id="message">用球拍反弹球击碎砖块</div>
+    </div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('score');
+        const bestDisplay = document.getElementById('best');
+        const messageDisplay = document.getElementById('message');
+        const startBtn = document.getElementById('startBtn');
+        
+        let score = 0;
+        let bestScore = localStorage.getItem('game73Best') || 0;
+        let gameRunning = false;
+        let animationId = null;
+        
+        bestDisplay.textContent = bestScore;
+        
+        function addScore(n) {
+            score += n;
+            scoreDisplay.textContent = score;
+            if(score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('game73Best', bestScore);
+                bestDisplay.textContent = bestScore;
+            }
+        }
+        
+        function gameOver() {
+            gameRunning = false;
+            cancelAnimationFrame(animationId);
+            messageDisplay.textContent = '游戏结束! 得分: ' + score;
+            startBtn.textContent = '重新开始';
+        }
+        
+        
+        const W=400, H=300; canvas.width=W; canvas.height=H;
+        let ballX=W/2, ballY=H/2, ballDX=3, ballDY=-3, ballR=8;
+        let paddleX=W/2-40, paddleW=80, paddleH=10;
+        let bricks=[];
+        function initBricks(){bricks=[];for(let r=0;r<5;r++)for(let c=0;c<8;c++)bricks.push({x:c*48+10,y:r*20+30,alive:true});}
+        function draw(){
+            ctx.fillStyle='#1a1a2e';ctx.fillRect(0,0,W,H);
+            ctx.fillStyle='#e74c3c';ctx.beginPath();ctx.arc(ballX,ballY,ballR,0,Math.PI*2);ctx.fill();
+            ctx.fillStyle='#3498db';ctx.fillRect(paddleX,H-paddleH-5,paddleW,paddleH);
+            bricks.forEach(b=>{if(b.alive){ctx.fillStyle='#2ecc71';ctx.fillRect(b.x,b.y,42,15);}});
+        }
+        function update(){
+            ballX+=ballDX;ballY+=ballDY;
+            if(ballX<ballR||ballX>W-ballR)ballDX=-ballDX;
+            if(ballY<ballR)ballDY=-ballDY;
+            if(ballY>H-ballR-paddleH-5&&ballX>paddleX&&ballX<paddleX+paddleW)ballDY=-ballDY;
+            if(ballY>H)gameOver();
+            bricks.forEach(b=>{if(b.alive&&ballX>b.x&&ballX<b.x+42&&ballY>b.y&&ballY<b.y+15){b.alive=false;ballDY=-ballDY;addScore(10);}});
+        }
+        function initGame(){ballX=W/2;ballY=H/2;ballDX=3;ballDY=-3;paddleX=W/2-40;initBricks();if(animationId)cancelAnimationFrame(animationId);gameLoop();}
+        function gameLoop(){if(!gameRunning)return;update();draw();animationId=requestAnimationFrame(gameLoop);}
+        document.addEventListener('keydown',e=>{if(e.key==='ArrowLeft')paddleX=Math.max(0,paddleX-20);if(e.key==='ArrowRight')paddleX=Math.min(W-paddleW,paddleX+20);});
+        document.getElementById('leftBtn').onclick=()=>paddleX=Math.max(0,paddleX-20);
+        document.getElementById('rightBtn').onclick=()=>paddleX=Math.min(W-paddleW,paddleX+20);
+    
+        
+        startBtn.addEventListener('click', () => {
+            score = 0;
+            scoreDisplay.textContent = score;
+            gameRunning = true;
+            messageDisplay.textContent = '游戏进行中...';
+            startBtn.textContent = '重新开始';
+            initGame();
+        });
+    </script>
+</body>
+</html>

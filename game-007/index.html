@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>连连看</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            padding: 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 600px;
+            width: 90%;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            font-size: 1.2rem;
+        }
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+            margin-bottom: 30px;
+            background: rgba(255,255,255,0.2);
+            padding: 15px;
+            border-radius: 10px;
+        }
+        .tile {
+            aspect-ratio: 1;
+            background: rgba(255,255,255,0.3);
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            border: 2px solid transparent;
+        }
+        .tile:hover {
+            background: rgba(255,255,255,0.5);
+            transform: scale(1.05);
+        }
+        .tile.selected {
+            border-color: rgba(102, 126, 234, 0.8);
+            background: rgba(102, 126, 234, 0.3);
+        }
+        .tile.matched {
+            background: rgba(81, 207, 102, 0.5);
+            cursor: default;
+            opacity: 0.6;
+        }
+        .tile.matched:hover {
+            transform: none;
+        }
+        button {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 30px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        .message {
+            font-size: 1.3rem;
+            margin-top: 20px;
+            min-height: 30px;
+        }
+        .timer {
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>连连看</h1>
+        <div class="timer">时间: <span id="timer">00:00</span></div>
+        <div class="stats">
+            <div>配对: <span id="pairs">0</span>/18</div>
+            <div>尝试: <span id="moves">0</span></div>
+        </div>
+        <div class="game-board" id="gameBoard"></div>
+        <button id="newGameBtn">新游戏</button>
+        <div class="message" id="message"></div>
+    </div>
+
+    <script>
+        const symbols = ['🍎', '🍌', '🍇', '🍊', '🍋', '🍓', '🍒', '🥝', '🍑', '🥭', '🍍', '🥥', '🍆', '🥑', '🥦', '🥬', '🥒', '🌽'];
+        let tiles = [];
+        let selectedTile = null;
+        let matchedPairs = 0;
+        let moves = 0;
+        let timerInterval = null;
+        let seconds = 0;
+        let isLocked = false;
+        
+        const gameBoard = document.getElementById('gameBoard');
+        const pairsDisplay = document.getElementById('pairs');
+        const movesDisplay = document.getElementById('moves');
+        const timerDisplay = document.getElementById('timer');
+        const messageDisplay = document.getElementById('message');
+        const newGameBtn = document.getElementById('newGameBtn');
+        
+        function initGame() {
+            // 创建18对符号
+            tiles = [...symbols, ...symbols];
+            
+            // 打乱顺序
+            shuffleArray(tiles);
+            
+            selectedTile = null;
+            matchedPairs = 0;
+            moves = 0;
+            seconds = 0;
+            isLocked = false;
+            
+            pairsDisplay.textContent = matchedPairs;
+            movesDisplay.textContent = moves;
+            timerDisplay.textContent = '00:00';
+            messageDisplay.textContent = '';
+            
+            // 开始计时
+            startTimer();
+            
+            // 渲染游戏板
+            renderBoard();
+        }
+        
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+        
+        function renderBoard() {
+            gameBoard.innerHTML = '';
+            
+            tiles.forEach((symbol, index) => {
+                const tile = document.createElement('div');
+                tile.className = 'tile';
+                tile.dataset.index = index;
+                tile.dataset.symbol = symbol;
+                tile.textContent = symbol;
+                
+                tile.addEventListener('click', () => selectTile(index));
+                
+                gameBoard.appendChild(tile);
+            });
+        }
+        
+        function selectTile(index) {
+            if (isLocked) return;
+            
+            const tile = document.querySelector(`.tile[data-index="${index}"]`);
+            
+            if (tile.classList.contains('matched') || tile.classList.contains('selected')) {
+                return;
+            }
+            
+            if (!selectedTile) {
+                // 第一次选择
+                tile.classList.add('selected');
+                selectedTile = index;
+            } else {
+                // 第二次选择
+                const selectedTileElement = document.querySelector(`.tile[data-index="${selectedTile}"]`);
+                
+                if (tiles[selectedTile] === tiles[index]) {
+                    // 匹配成功
+                    tile.classList.add('matched');
+                    selectedTileElement.classList.add('matched');
+                    selectedTileElement.classList.remove('selected');
+                    matchedPairs++;
+                    pairsDisplay.textContent = matchedPairs;
+                    
+                    if (matchedPairs === 18) {
+                        clearInterval(timerInterval);
+                        messageDisplay.textContent = `恭喜! 你用了 ${moves} 次完成了游戏!`;
+                    }
+                } else {
+                    // 匹配失败
+                    isLocked = true;
+                    moves++;
+                    movesDisplay.textContent = moves;
+                    
+                    setTimeout(() => {
+                        tile.classList.remove('selected');
+                        selectedTileElement.classList.remove('selected');
+                        selectedTile = null;
+                        isLocked = false;
+                    }, 1000);
+                }
+                
+                if (tiles[selectedTile] !== tiles[index]) {
+                    tile.classList.add('selected');
+                } else {
+                    selectedTile = null;
+                }
+            }
+        }
+        
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            seconds = 0;
+            
+            timerInterval = setInterval(() => {
+                seconds++;
+                const mins = Math.floor(seconds / 60).toString().padStart(2, '0');
+                const secs = (seconds % 60).toString().padStart(2, '0');
+                timerDisplay.textContent = `${mins}:${secs}`;
+            }, 1000);
+        }
+        
+        newGameBtn.addEventListener('click', initGame);
+        
+        // 初始化游戏
+        initGame();
+    </script>
+</body>
+</html>

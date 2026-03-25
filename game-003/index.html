@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>记忆翻牌</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            padding: 30px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 600px;
+            width: 90%;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 30px;
+            font-size: 1.2rem;
+        }
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .card {
+            aspect-ratio: 1;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(255,255,255,0.3);
+            user-select: none;
+        }
+        .card:hover {
+            transform: scale(1.05);
+            background: rgba(255,255,255,0.3);
+        }
+        .card.flipped {
+            background: rgba(255,255,255,0.9);
+            color: #333;
+        }
+        .card.matched {
+            background: rgba(81, 207, 102, 0.5);
+            border-color: rgba(81, 207, 102, 0.8);
+            cursor: default;
+        }
+        .card.matched:hover {
+            transform: none;
+        }
+        button {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 30px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        .message {
+            font-size: 1.3rem;
+            margin-top: 20px;
+            min-height: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>记忆翻牌</h1>
+        <div class="stats">
+            <div>配对: <span id="pairs">0</span>/8</div>
+            <div>尝试: <span id="moves">0</span></div>
+        </div>
+        <div class="game-board" id="gameBoard"></div>
+        <button id="restartBtn">重新开始</button>
+        <div class="message" id="message"></div>
+    </div>
+
+    <script>
+        const symbols = ['🍎', '🍌', '🍇', '🍊', '🍋', '🍓', '🍒', '🥝'];
+        let cards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let moves = 0;
+        let isLocked = false;
+        
+        const gameBoard = document.getElementById('gameBoard');
+        const pairsDisplay = document.getElementById('pairs');
+        const movesDisplay = document.getElementById('moves');
+        const messageDisplay = document.getElementById('message');
+        const restartBtn = document.getElementById('restartBtn');
+        
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+        
+        function createBoard() {
+            cards = [];
+            flippedCards = [];
+            matchedPairs = 0;
+            moves = 0;
+            isLocked = false;
+            
+            pairsDisplay.textContent = matchedPairs;
+            movesDisplay.textContent = moves;
+            messageDisplay.textContent = '';
+            
+            // 创建8对卡片
+            const cardSymbols = [...symbols, ...symbols];
+            shuffleArray(cardSymbols);
+            
+            gameBoard.innerHTML = '';
+            
+            cardSymbols.forEach((symbol, index) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.dataset.index = index;
+                card.dataset.symbol = symbol;
+                card.textContent = '?';
+                
+                card.addEventListener('click', () => flipCard(card));
+                
+                gameBoard.appendChild(card);
+                cards.push(card);
+            });
+        }
+        
+        function flipCard(card) {
+            if (isLocked || card.classList.contains('flipped') || card.classList.contains('matched')) {
+                return;
+            }
+            
+            card.classList.add('flipped');
+            card.textContent = card.dataset.symbol;
+            flippedCards.push(card);
+            
+            if (flippedCards.length === 2) {
+                moves++;
+                movesDisplay.textContent = moves;
+                checkMatch();
+            }
+        }
+        
+        function checkMatch() {
+            isLocked = true;
+            
+            const [card1, card2] = flippedCards;
+            
+            if (card1.dataset.symbol === card2.dataset.symbol) {
+                // 匹配成功
+                card1.classList.add('matched');
+                card2.classList.add('matched');
+                matchedPairs++;
+                pairsDisplay.textContent = matchedPairs;
+                
+                if (matchedPairs === 8) {
+                    messageDisplay.textContent = `恭喜! 你用了 ${moves} 次完成了游戏!`;
+                }
+                
+                flippedCards = [];
+                isLocked = false;
+            } else {
+                // 匹配失败，翻回去
+                setTimeout(() => {
+                    card1.classList.remove('flipped');
+                    card2.classList.remove('flipped');
+                    card1.textContent = '?';
+                    card2.textContent = '?';
+                    flippedCards = [];
+                    isLocked = false;
+                }, 1000);
+            }
+        }
+        
+        restartBtn.addEventListener('click', createBoard);
+        
+        // 初始化游戏
+        createBoard();
+    </script>
+</body>
+</html>

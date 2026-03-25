@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>100个JavaScript小游戏</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        .categories {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 40px;
+            flex-wrap: wrap;
+        }
+        .category-btn {
+            padding: 12px 24px;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 25px;
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .category-btn:hover, .category-btn.active {
+            background: rgba(255,255,255,0.3);
+            border-color: white;
+            transform: translateY(-2px);
+        }
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+        .game-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+        .game-number {
+            font-size: 0.9rem;
+            color: #667eea;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .game-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #333;
+        }
+        .game-category {
+            font-size: 0.9rem;
+            color: #764ba2;
+            margin-bottom: 10px;
+        }
+        .game-desc {
+            font-size: 0.95rem;
+            color: #666;
+            line-height: 1.4;
+        }
+        .game-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+            .games-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>100个JavaScript小游戏</h1>
+            <p class="subtitle">纯浏览器游戏，无需安装，打开即玩</p>
+        </header>
+        
+        <div class="categories">
+            <button class="category-btn active" data-category="all">全部游戏</button>
+            <button class="category-btn" data-category="puzzle">益智解谜</button>
+            <button class="category-btn" data-category="card">纸牌棋盘</button>
+            <button class="category-btn" data-category="action">动作射击</button>
+        </div>
+        
+        <div class="games-grid" id="gamesGrid">
+            <!-- 游戏卡片将通过JavaScript动态生成 -->
+        </div>
+    </div>
+
+    <script>
+        const games = [
+            // 益智解谜类 (1-35)
+            { id: 1, title: "点击计数器", category: "puzzle", icon: "👆", desc: "5秒内点击最多次数" },
+            { id: 2, title: "猜数字", category: "puzzle", icon: "🔢", desc: "1-100猜数字" },
+            { id: 3, title: "记忆翻牌", category: "puzzle", icon: "🃏", desc: "配对卡片" },
+            { id: 4, title: "2048", category: "puzzle", icon: "🧮", desc: "数字合并游戏" },
+            { id: 5, title: "数独", category: "puzzle", icon: "🔢", desc: "简化版数独" },
+            { id: 6, title: "滑块拼图", category: "puzzle", icon: "🧩", desc: "15拼图" },
+            { id: 7, title: "连连看", category: "puzzle", icon: "🔗", desc: "图案配对" },
+            { id: 8, title: "找不同", category: "puzzle", icon: "🔍", desc: "两图对比" },
+            { id: 9, title: "汉诺塔", category: "puzzle", icon: "🗼", desc: "经典递归游戏" },
+            { id: 10, title: "华容道", category: "puzzle", icon: "🚪", desc: "滑块解谜" },
+            { id: 11, title: "数织谜题", category: "puzzle", icon: "📐", desc: "Picross简化版" },
+            { id: 12, title: "填字游戏", category: "puzzle", icon: "📝", desc: "简单填字" },
+            { id: 13, title: "扫雷", category: "puzzle", icon: "💣", desc: "经典扫雷" },
+            { id: 14, title: "迷宫生成", category: "puzzle", icon: "🌀", desc: "随机迷宫" },
+            { id: 15, title: "逻辑门电路", category: "puzzle", icon: "⚡", desc: "基础逻辑" },
+            { id: 16, title: "数字推理", category: "puzzle", icon: "🧮", desc: "数学推理" },
+            { id: 17, title: "图形匹配", category: "puzzle", icon: "🔷", desc: "图形识别" },
+            { id: 18, title: "颜色混合", category: "puzzle", icon: "🎨", desc: "RGB混合" },
+            { id: 19, title: "方向判断", category: "puzzle", icon: "🧭", desc: "空间方向" },
+            { id: 20, title: "序列预测", category: "puzzle", icon: "📈", desc: "数列规律" },
+            { id: 21, title: "模式识别", category: "puzzle", icon: "🔄", desc: "图案模式" },
+            { id: 22, title: "空间旋转", category: "puzzle", icon: "🔄", desc: "3D旋转" },
+            { id: 23, title: "镜像对称", category: "puzzle", icon: "🪞", desc: "对称判断" },
+            { id: 24, title: "路径规划", category: "puzzle", icon: "🗺️", desc: "最短路径" },
+            { id: 25, title: "物品分类", category: "puzzle", icon: "📦", desc: "分类游戏" },
+            { id: 26, title: "大小比较", category: "puzzle", icon: "⚖️", desc: "数字比较" },
+            { id: 27, title: "时间计算", category: "puzzle", icon: "⏰", desc: "时间差" },
+            { id: 28, title: "距离估算", category: "puzzle", icon: "📏", desc: "距离判断" },
+            { id: 29, title: "角度测量", category: "puzzle", icon: "📐", desc: "角度估算" },
+            { id: 30, title: "面积计算", category: "puzzle", icon: "⬜", desc: "面积估算" },
+            { id: 31, title: "体积估算", category: "puzzle", icon: "📦", desc: "3D体积" },
+            { id: 32, title: "重量平衡", category: "puzzle", icon: "⚖️", desc: "天平游戏" },
+            { id: 33, title: "速度控制", category: "puzzle", icon: "🚀", desc: "速度调节" },
+            { id: 34, title: "加速度模拟", category: "puzzle", icon: "🏎️", desc: "物理模拟" },
+            { id: 35, title: "重力感应", category: "puzzle", icon: "🌍", desc: "重力游戏" },
+            
+            // 纸牌棋盘类 (36-70)
+            { id: 36, title: "井字棋", category: "card", icon: "⭕", desc: "经典Tic-Tac-Toe" },
+            { id: 37, title: "五子棋", category: "card", icon: "⚫", desc: "连五子" },
+            { id: 38, title: "四子棋", category: "card", icon: "🔴", desc: "连四子" },
+            { id: 39, title: "黑白棋", category: "card", icon: "⚫", desc: "Reversi" },
+            { id: 40, title: "跳棋", category: "card", icon: "🔴", desc: "Checkers简化版" },
+            { id: 41, title: "国际象棋", category: "card", icon: "♔", desc: "象棋简化版" },
+            { id: 42, title: "中国象棋", category: "card", icon: "將", desc: "象棋简化版" },
+            { id: 43, title: "扑克接龙", category: "card", icon: "♠️", desc: "Solitaire" },
+            { id: 44, title: "纸牌记忆", category: "card", icon: "🎴", desc: "记忆配对" },
+            { id: 45, title: "骰子游戏", category: "card", icon: "🎲", desc: "Yahtzee简化版" },
+            { id: 46, title: "轮盘赌", category: "card", icon: "🎡", desc: "轮盘游戏" },
+            { id: 47, title: "老虎机", category: "card", icon: "🎰", desc: "老虎机模拟" },
+            { id: 48, title: "彩票刮刮乐", category: "card", icon: "🎫", desc: "刮刮乐游戏" },
+            { id: 49, title: "赛马游戏", category: "card", icon: "🏇", desc: "赛马模拟" },
+            { id: 50, title: "赛车游戏", category: "card", icon: "🏎️", desc: "赛车模拟" },
+            { id: 51, title: "钓鱼游戏", category: "card", icon: "🎣", desc: "钓鱼模拟" },
+            { id: 52, title: "打地鼠", category: "card", icon: "🐹", desc: "Whack-a-Mole" },
+            { id: 53, title: "套圈游戏", category: "card", icon: "⭕", desc: "套圈模拟" },
+            { id: 54, title: "投篮游戏", category: "card", icon: "🏀", desc: "投篮模拟" },
+            { id: 55, title: "射箭游戏", category: "card", icon: "🏹", desc: "射箭模拟" },
+            { id: 56, title: "飞镖游戏", category: "card", icon: "🎯", desc: "飞镖模拟" },
+            { id: 57, title: "保龄球", category: "card", icon: "🎳", desc: "保龄球模拟" },
+            { id: 58, title: "高尔夫", category: "card", icon: "⛳", desc: "高尔夫简化版" },
+            { id: 59, title: "网球", category: "card", icon: "🎾", desc: "网球简化版" },
+            { id: 60, title: "乒乓球", category: "card", icon: "🏓", desc: "乒乓球模拟" },
+            { id: 61, title: "羽毛球", category: "card", icon: "🏸", desc: "羽毛球模拟" },
+            { id: 62, title: "足球", category: "card", icon: "⚽", desc: "足球简化版" },
+            { id: 63, title: "篮球", category: "card", icon: "🏀", desc: "篮球模拟" },
+            { id: 64, title: "冰球", category: "card", icon: "🏒", desc: "冰球模拟" },
+            { id: 65, title: "曲棍球", category: "card", icon: "🏑", desc: "曲棍球模拟" },
+            { id: 66, title: "棒球", category: "card", icon: "⚾", desc: "棒球模拟" },
+            { id: 67, title: "橄榄球", category: "card", icon: "🏈", desc: "橄榄球模拟" },
+            { id: 68, title: "排球", category: "card", icon: "🏐", desc: "排球模拟" },
+            { id: 69, title: "手球", category: "card", icon: "🤾", desc: "手球模拟" },
+            { id: 70, title: "水球", category: "card", icon: "🤽", desc: "水球模拟" },
+            
+            // 动作射击类 (71-100)
+            { id: 71, title: "贪吃蛇", category: "action", icon: "🐍", desc: "经典贪吃蛇" },
+            { id: 72, title: "俄罗斯方块", category: "action", icon: "🧱", desc: "Tetris" },
+            { id: 73, title: "打砖块", category: "action", icon: "🧱", desc: "Breakout" },
+            { id: 74, title: "太空侵略者", category: "action", icon: "👾", desc: "Space Invaders" },
+            { id: 75, title: "飞机大战", category: "action", icon: "✈️", desc: "飞机射击" },
+            { id: 76, title: "坦克大战", category: "action", icon: "坦克", desc: "坦克射击" },
+            { id: 77, title: "吃豆人", category: "action", icon: "🟡", desc: "Pac-Man简化版" },
+            { id: 78, title: "超级玛丽", category: "action", icon: "🍄", desc: "Mario简化版" },
+            { id: 79, title: "魂斗罗", category: "action", icon: "🔫", desc: "Contra简化版" },
+            { id: 80, title: "彩虹岛", category: "action", icon: "🌈", desc: "Rainbow简化版" },
+            { id: 81, title: "冒险岛", category: "action", icon: "🏝️", desc: "Adventure简化版" },
+            { id: 82, title: "忍者神龟", category: "action", icon: "🐢", desc: "TMNT简化版" },
+            { id: 83, title: "街头霸王", category: "action", icon: "🥊", desc: "Street Fighter简化版" },
+            { id: 84, title: "拳皇", category: "action", icon: "👊", desc: "King of Fighters简化版" },
+            { id: 85, title: "侍魂", category: "action", icon: "⚔️", desc: "Samurai简化版" },
+            { id: 86, title: "合金弹头", category: "action", icon: "💣", desc: "Metal Slug简化版" },
+            { id: 87, title: "战场之狼", category: "action", icon: "🐺", desc: "Battle简化版" },
+            { id: 88, title: "1942", category: "action", icon: "🛩️", desc: "经典射击游戏" },
+            { id: 89, title: "雷电", category: "action", icon: "⚡", desc: "Raiden简化版" },
+            { id: 90, title: "沙罗曼蛇", category: "action", icon: "🐍", desc: "Salamander简化版" },
+            { id: 91, title: "异形战机", category: "action", icon: "👽", desc: "Alien简化版" },
+            { id: 92, title: "铁板阵", category: "action", icon: "🛡️", desc: "Xevious简化版" },
+            { id: 93, title: "小蜜蜂", category: "action", icon: "🐝", desc: "Galaga简化版" },
+            { id: 94, title: "大蜜蜂", category: "action", icon: "🐝", desc: "Galaxian简化版" },
+            { id: 95, title: "小行星", category: "action", icon: "☄️", desc: "Asteroids" },
+            { id: 96, title: "陨石大战", category: "action", icon: "🌠", desc: "Meteor简化版" },
+            { id: 97, title: "月球登陆", category: "action", icon: "🌙", desc: "Moon Landing" },
+            { id: 98, title: "太阳系探险", category: "action", icon: "☀️", desc: "Solar简化版" },
+            { id: 99, title: "星际旅行", category: "action", icon: "🚀", desc: "Star简化版" },
+            { id: 100, title: "宇宙战争", category: "action", icon: "🌌", desc: "Space简化版" }
+        ];
+
+        const gamesGrid = document.getElementById('gamesGrid');
+        const categoryBtns = document.querySelectorAll('.category-btn');
+
+        function renderGames(category = 'all') {
+            gamesGrid.innerHTML = '';
+            
+            const filteredGames = category === 'all' 
+                ? games 
+                : games.filter(game => game.category === category);
+            
+            filteredGames.forEach(game => {
+                const gameCard = document.createElement('a');
+                gameCard.className = 'game-card';
+                gameCard.href = `game-${String(game.id).padStart(3, '0')}/index.html`;
+                
+                const categoryNames = {
+                    'puzzle': '益智解谜',
+                    'card': '纸牌棋盘',
+                    'action': '动作射击'
+                };
+                
+                gameCard.innerHTML = `
+                    <div class="game-icon">${game.icon}</div>
+                    <div class="game-number">游戏 #${game.id}</div>
+                    <div class="game-title">${game.title}</div>
+                    <div class="game-category">${categoryNames[game.category]}</div>
+                    <div class="game-desc">${game.desc}</div>
+                `;
+                
+                gamesGrid.appendChild(gameCard);
+            });
+        }
+
+        categoryBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                categoryBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                renderGames(btn.dataset.category);
+            });
+        });
+
+        // 初始渲染
+        renderGames();
+    </script>
+</body>
+</html>

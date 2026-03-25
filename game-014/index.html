@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>迷宫生成</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:Arial; background:linear-gradient(135deg,#667eea,#764ba2); min-height:100vh; display:flex; justify-content:center; align-items:center; color:white; }
+        .container { text-align:center; padding:30px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:500px; width:90%; }
+        h1 { font-size:2rem; margin-bottom:15px; }
+        .game-area { min-height:200px; background:rgba(255,255,255,0.2); border-radius:10px; padding:20px; margin:20px 0; }
+        button { padding:12px 30px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:25px; color:white; cursor:pointer; margin:5px; }
+        button:hover { background:rgba(255,255,255,0.3); }
+        .message { font-size:1.2rem; margin-top:15px; min-height:25px; color:#51cf66; }
+        .score { font-size:1rem; margin-bottom:10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>迷宫生成</h1>
+        <div class="score">分数: <span id="score">0</span></div>
+        <div class="game-area">
+            <p>找到从起点到终点的路</p>
+            
+        <canvas id="maze" width="200" height="200" style="background:#2c3e50;border-radius:10px;"></canvas>
+        <p>使用方向键移动</p>
+    
+        </div>
+        <button onclick="location.reload()">重新开始</button>
+        <div class="message" id="message"></div>
+    </div>
+    <script>
+        let score = 0;
+        const messageDisplay = document.getElementById('message');
+        const scoreDisplay = document.getElementById('score');
+        
+        const canvas = document.getElementById('maze');
+        const ctx = canvas.getContext('2d');
+        const size = 10, cellSize = 20;
+        let maze = Array(size).fill().map(() => Array(size).fill(1));
+        let player = {x:0,y:0};
+        
+        // 简单迷宫生成
+        function generate() {
+            for(let y=0;y<size;y++) for(let x=0;x<size;x++) maze[y][x] = Math.random()>0.3?0:1;
+            maze[0][0]=0; maze[size-1][size-1]=0;
+        }
+        
+        function draw() {
+            ctx.clearRect(0,0,200,200);
+            for(let y=0;y<size;y++) for(let x=0;x<size;x++) {
+                ctx.fillStyle = maze[y][x]?'#34495e':'#ecf0f1';
+                ctx.fillRect(x*cellSize,y*cellSize,cellSize-1,cellSize-1);
+            }
+            ctx.fillStyle = '#e74c3c';
+            ctx.fillRect(player.x*cellSize+2,player.y*cellSize+2,cellSize-5,cellSize-5);
+            ctx.fillStyle = '#2ecc71';
+            ctx.fillRect((size-1)*cellSize+2,(size-1)*cellSize+2,cellSize-5,cellSize-5);
+        }
+        
+        document.addEventListener('keydown', e => {
+            const dx = {ArrowLeft:-1,ArrowRight:1,ArrowUp:0,ArrowDown:0}[e.key]||0;
+            const dy = {ArrowLeft:0,ArrowRight:0,ArrowUp:-1,ArrowDown:1}[e.key]||0;
+            const nx=player.x+dx, ny=player.y+dy;
+            if(nx>=0&&nx<size&&ny>=0&&ny<size&&!maze[ny][nx]) {
+                player.x=nx; player.y=ny;
+                if(nx===size-1&&ny===size-1) messageDisplay.textContent = '恭喜到达终点!';
+            }
+            draw();
+        });
+        
+        generate(); draw();
+    
+    </script>
+</body>
+</html>

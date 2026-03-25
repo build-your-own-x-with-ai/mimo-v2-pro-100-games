@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>坦克大战</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:Arial; background:linear-gradient(135deg,#667eea,#764ba2); min-height:100vh; display:flex; justify-content:center; align-items:center; color:white; }
+        .container { text-align:center; padding:20px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:600px; width:95%; }
+        h1 { font-size:1.8rem; margin-bottom:10px; }
+        .game-area { min-height:300px; background:rgba(0,0,0,0.3); border-radius:10px; padding:15px; margin:15px 0; }
+        canvas { display:block; margin:0 auto; background:#1a1a2e; border-radius:5px; }
+        button { padding:10px 25px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
+        button:hover { background:rgba(255,255,255,0.3); }
+        .message { font-size:1.1rem; margin-top:10px; min-height:20px; }
+        .score { font-size:0.9rem; margin-bottom:10px; }
+        .controls { margin-top:10px; }
+        .ctrl-btn { width:50px; height:50px; font-size:1.5rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>坦克大战</h1>
+        <div class="score">分数: <span id="score">0</span> | 最高分: <span id="best">0</span></div>
+        <div class="game-area">
+            <canvas id="gameCanvas" width="400" height="300"></canvas>
+        </div>
+        <div class="controls">
+            <button class="ctrl-btn" id="leftBtn">←</button>
+            <button class="ctrl-btn" id="upBtn">↑</button>
+            <button class="ctrl-btn" id="downBtn">↓</button>
+            <button class="ctrl-btn" id="rightBtn">→</button>
+            <button class="ctrl-btn" id="fireBtn">射击</button>
+        </div>
+        <button id="startBtn">开始游戏</button>
+        <div class="message" id="message">控制坦克消灭敌人</div>
+    </div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('score');
+        const bestDisplay = document.getElementById('best');
+        const messageDisplay = document.getElementById('message');
+        const startBtn = document.getElementById('startBtn');
+        
+        let score = 0;
+        let bestScore = localStorage.getItem('game76Best') || 0;
+        let gameRunning = false;
+        let animationId = null;
+        
+        bestDisplay.textContent = bestScore;
+        
+        function addScore(n) {
+            score += n;
+            scoreDisplay.textContent = score;
+            if(score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('game76Best', bestScore);
+                bestDisplay.textContent = bestScore;
+            }
+        }
+        
+        function gameOver() {
+            gameRunning = false;
+            cancelAnimationFrame(animationId);
+            messageDisplay.textContent = '游戏结束! 得分: ' + score;
+            startBtn.textContent = '重新开始';
+        }
+        
+        
+        const W=400, H=300; canvas.width=W; canvas.height=H;
+        let tankX=W/2, tankY=H-40, tankDir=0, bullets=[], enemies=[];
+        function draw(){
+            ctx.fillStyle='#2c3e50';ctx.fillRect(0,0,W,H);
+            ctx.fillStyle='#27ae60';ctx.fillRect(tankX-15,tankY-10,30,20);
+            ctx.fillStyle='#1a5e1a';ctx.fillRect(tankX-5,tankY-15,10,5);
+            bullets.forEach(b=>{ctx.fillStyle='#f1c40f';ctx.fillRect(b.x-3,b.y-3,6,6);});
+            enemies.forEach(e=>{ctx.fillStyle='#e74c3c';ctx.fillRect(e.x-12,e.y-8,24,16);});
+        }
+        function update(){
+            bullets.forEach(b=>{b.x+=b.dx;b.y+=b.dy;});bullets=bullets.filter(b=>b.x>0&&b.x<W&&b.y>0&&b.y<H);
+            if(Math.random()<0.01)enemies.push({x:Math.random()*(W-40)+20,y:20});
+            enemies.forEach(e=>{e.y+=1;bullets.forEach(b=>{if(Math.abs(b.x-e.x)<15&&Math.abs(b.y-e.y)<10){e.y=H+10;b.y=-10;addScore(10);}});});
+            enemies=enemies.filter(e=>e.y<H);
+        }
+        function initGame(){tankX=W/2;tankY=H-40;bullets=[];enemies=[];if(animationId)cancelAnimationFrame(animationId);gameLoop();}
+        function gameLoop(){if(!gameRunning)return;update();draw();animationId=requestAnimationFrame(gameLoop);}
+        function fire(){if(!gameRunning)return;const dirs=[{dx:0,dy:-5},{dx:5,dy:0},{dx:0,dy:5},{dx:-5,dy:0}];bullets.push({x:tankX,y:tankY,...dirs[tankDir]});}
+        document.addEventListener('keydown',e=>{if(e.key==='ArrowUp'){tankY=Math.max(20,tankY-10);tankDir=0;}if(e.key==='ArrowDown'){tankY=Math.min(H-20,tankY+10);tankDir=2;}if(e.key==='ArrowLeft'){tankX=Math.max(20,tankX-10);tankDir=3;}if(e.key==='ArrowRight'){tankX=Math.min(W-20,tankX+10);tankDir=1;}if(e.key===' ')fire();});
+        document.getElementById('upBtn').onclick=()=>{tankY=Math.max(20,tankY-10);tankDir=0;};
+        document.getElementById('downBtn').onclick=()=>{tankY=Math.min(H-20,tankY+10);tankDir=2;};
+        document.getElementById('leftBtn').onclick=()=>{tankX=Math.max(20,tankX-10);tankDir=3;};
+        document.getElementById('rightBtn').onclick=()=>{tankX=Math.min(W-20,tankX+10);tankDir=1;};
+        document.getElementById('fireBtn').onclick=fire;
+    
+        
+        startBtn.addEventListener('click', () => {
+            score = 0;
+            scoreDisplay.textContent = score;
+            gameRunning = true;
+            messageDisplay.textContent = '游戏进行中...';
+            startBtn.textContent = '重新开始';
+            initGame();
+        });
+    </script>
+</body>
+</html>

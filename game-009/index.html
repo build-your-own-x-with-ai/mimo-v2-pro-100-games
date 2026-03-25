@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>汉诺塔</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:Arial; background:linear-gradient(135deg,#667eea,#764ba2); min-height:100vh; display:flex; justify-content:center; align-items:center; color:white; }
+        .container { text-align:center; padding:30px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:500px; width:90%; }
+        h1 { font-size:2rem; margin-bottom:15px; }
+        .game-area { min-height:200px; background:rgba(255,255,255,0.2); border-radius:10px; padding:20px; margin:20px 0; }
+        button { padding:12px 30px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:25px; color:white; cursor:pointer; margin:5px; }
+        button:hover { background:rgba(255,255,255,0.3); }
+        .message { font-size:1.2rem; margin-top:15px; min-height:25px; color:#51cf66; }
+        .score { font-size:1rem; margin-bottom:10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>汉诺塔</h1>
+        <div class="score">分数: <span id="score">0</span></div>
+        <div class="game-area">
+            <p>将所有盘子从A柱移动到C柱</p>
+            
+        <div style="display:flex;justify-content:space-around;margin:20px 0;">
+            <div class="peg" data-peg="0" style="width:80px;height:150px;background:#8e44ad;border-radius:5px;display:flex;flex-direction:column-reverse;align-items:center;justify-content:flex-start;padding:5px;"></div>
+            <div class="peg" data-peg="1" style="width:80px;height:150px;background:#8e44ad;border-radius:5px;display:flex;flex-direction:column-reverse;align-items:center;justify-content:flex-start;padding:5px;"></div>
+            <div class="peg" data-peg="2" style="width:80px;height:150px;background:#8e44ad;border-radius:5px;display:flex;flex-direction:column-reverse;align-items:center;justify-content:flex-start;padding:5px;"></div>
+        </div>
+        <p>点击盘子选中，再点击目标柱子移动</p>
+    
+        </div>
+        <button onclick="location.reload()">重新开始</button>
+        <div class="message" id="message"></div>
+    </div>
+    <script>
+        let score = 0;
+        const messageDisplay = document.getElementById('message');
+        const scoreDisplay = document.getElementById('score');
+        
+        let towers = [[3,2,1],[],[]];
+        let selected = null;
+        function render() {
+            document.querySelectorAll('.peg').forEach((p,i) => {
+                p.innerHTML = towers[i].map(d => `<div style="width:${d*20}px;height:15px;background:#e74c3c;margin:2px;border-radius:3px;"></div>`).join('');
+            });
+        }
+        document.querySelectorAll('.peg').forEach(p => {
+            p.addEventListener('click', () => {
+                const peg = parseInt(p.dataset.peg);
+                if(selected === null && towers[peg].length) {
+                    selected = peg;
+                    p.style.border = '2px solid yellow';
+                } else if(selected !== null) {
+                    const disk = towers[selected][towers[selected].length-1];
+                    const top = towers[peg][towers[peg].length-1];
+                    if(!top || disk < top) {
+                        towers[peg].push(towers[selected].pop());
+                        if(towers[2].length === 3) messageDisplay.textContent = '恭喜完成!';
+                    }
+                    document.querySelectorAll('.peg').forEach(x => x.style.border = 'none');
+                    selected = null;
+                    render();
+                }
+            });
+        });
+        render();
+    
+    </script>
+</body>
+</html>

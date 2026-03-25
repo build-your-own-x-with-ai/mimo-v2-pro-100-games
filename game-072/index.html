@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>俄罗斯方块</title>
+    <style>
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:Arial; background:linear-gradient(135deg,#667eea,#764ba2); min-height:100vh; display:flex; justify-content:center; align-items:center; color:white; }
+        .container { text-align:center; padding:20px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:600px; width:95%; }
+        h1 { font-size:1.8rem; margin-bottom:10px; }
+        .game-area { min-height:300px; background:rgba(0,0,0,0.3); border-radius:10px; padding:15px; margin:15px 0; }
+        canvas { display:block; margin:0 auto; background:#1a1a2e; border-radius:5px; }
+        button { padding:10px 25px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
+        button:hover { background:rgba(255,255,255,0.3); }
+        .message { font-size:1.1rem; margin-top:10px; min-height:20px; }
+        .score { font-size:0.9rem; margin-bottom:10px; }
+        .controls { margin-top:10px; }
+        .ctrl-btn { width:50px; height:50px; font-size:1.5rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>俄罗斯方块</h1>
+        <div class="score">分数: <span id="score">0</span> | 最高分: <span id="best">0</span></div>
+        <div class="game-area">
+            <canvas id="gameCanvas" width="400" height="300"></canvas>
+        </div>
+        <div class="controls">
+            <button class="ctrl-btn" id="leftBtn">←</button>
+            <button class="ctrl-btn" id="upBtn">↑</button>
+            <button class="ctrl-btn" id="downBtn">↓</button>
+            <button class="ctrl-btn" id="rightBtn">→</button>
+            <button class="ctrl-btn" id="fireBtn">射击</button>
+        </div>
+        <button id="startBtn">开始游戏</button>
+        <div class="message" id="message">经典方块消除游戏</div>
+    </div>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreDisplay = document.getElementById('score');
+        const bestDisplay = document.getElementById('best');
+        const messageDisplay = document.getElementById('message');
+        const startBtn = document.getElementById('startBtn');
+        
+        let score = 0;
+        let bestScore = localStorage.getItem('game72Best') || 0;
+        let gameRunning = false;
+        let animationId = null;
+        
+        bestDisplay.textContent = bestScore;
+        
+        function addScore(n) {
+            score += n;
+            scoreDisplay.textContent = score;
+            if(score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('game72Best', bestScore);
+                bestDisplay.textContent = bestScore;
+            }
+        }
+        
+        function gameOver() {
+            gameRunning = false;
+            cancelAnimationFrame(animationId);
+            messageDisplay.textContent = '游戏结束! 得分: ' + score;
+            startBtn.textContent = '重新开始';
+        }
+        
+        
+        const COLS = 10, ROWS = 20, BLOCK = 15;
+        canvas.width = COLS * BLOCK;
+        canvas.height = ROWS * BLOCK;
+        let board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
+        let piece = null, pieceX = 0, pieceY = 0;
+        const shapes = [[[1,1,1,1]],[[1,1],[1,1]],[[1,1,1],[0,1,0]],[[1,1,1],[1,0,0]],[[1,1,1],[0,0,1]],[[1,1,0],[0,1,1]],[[0,1,1],[1,1,0]]];
+        
+        function newPiece() {
+            piece = shapes[Math.floor(Math.random()*shapes.length)].map(r=>[...r]);
+            pieceX = Math.floor(COLS/2)-1; pieceY = 0;
+            if(checkCollision()) gameOver();
+        }
+        
+        function checkCollision() {
+            for(let r=0;r<piece.length;r++) for(let c=0;c<piece[r].length;c++) {
+                if(piece[r][c]) {
+                    const x=pieceX+c, y=pieceY+r;
+                    if(x<0||x>=COLS||y>=ROWS||board[y][x]) return true;
+                }
+            }
+            return false;
+        }
+        
+        function merge() {
+            for(let r=0;r<piece.length;r++) for(let c=0;c<piece[r].length;c++) {
+                if(piece[r][c]) board[pieceY+r][pieceX+c] = 1;
+            }
+            for(let r=ROWS-1;r>=0;r--) {
+                if(board[r].every(c=>c)) { board.splice(r,1); board.unshift(Array(COLS).fill(0)); addScore(100); }
+            }
+            newPiece();
+        }
+        
+        function rotate() {
+            const rot = piece[0].map((_,i)=>piece.map(r=>r[i]).reverse());
+            const old=piece; piece=rot;
+            if(checkCollision()) piece=old;
+        }
+        
+        function draw() {
+            ctx.fillStyle='#1a1a2e'; ctx.fillRect(0,0,canvas.width,canvas.height);
+            board.forEach((row,r)=>row.forEach((cell,c)=>{
+                if(cell){ctx.fillStyle='#3498db';ctx.fillRect(c*BLOCK+1,r*BLOCK+1,BLOCK-2,BLOCK-2);}
+            }));
+            if(piece) piece.forEach((row,r)=>row.forEach((cell,c)=>{
+                if(cell){ctx.fillStyle='#e74c3c';ctx.fillRect((pieceX+c)*BLOCK+1,(pieceY+r)*BLOCK+1,BLOCK-2,BLOCK-2);}
+            }));
+        }
+        
+        let lastDrop=0;
+        function gameLoop(time=0) {
+            if(!gameRunning) return;
+            if(time-lastDrop>500){pieceY++;if(checkCollision()){pieceY--;merge();}lastDrop=time;}
+            draw(); animationId=requestAnimationFrame(gameLoop);
+        }
+        
+        function initGame() {
+            board=Array(ROWS).fill().map(()=>Array(COLS).fill(0));
+            newPiece(); if(animationId) cancelAnimationFrame(animationId); gameLoop();
+        }
+        
+        document.addEventListener('keydown',e=>{
+            if(!gameRunning) return;
+            if(e.key==='ArrowLeft'){pieceX--;if(checkCollision())pieceX++;}
+            if(e.key==='ArrowRight'){pieceX++;if(checkCollision())pieceX--;}
+            if(e.key==='ArrowDown'){pieceY++;if(checkCollision()){pieceY--;merge();}}
+            if(e.key==='ArrowUp') rotate();
+        });
+        document.getElementById('leftBtn').onclick=()=>{if(gameRunning){pieceX--;if(checkCollision())pieceX++;}};
+        document.getElementById('rightBtn').onclick=()=>{if(gameRunning){pieceX++;if(checkCollision())pieceX--;}};
+        document.getElementById('downBtn').onclick=()=>{if(gameRunning){pieceY++;if(checkCollision()){pieceY--;merge();}}};
+        document.getElementById('upBtn').onclick=()=>{if(gameRunning)rotate();};
+    
+        
+        startBtn.addEventListener('click', () => {
+            score = 0;
+            scoreDisplay.textContent = score;
+            gameRunning = true;
+            messageDisplay.textContent = '游戏进行中...';
+            startBtn.textContent = '重新开始';
+            initGame();
+        });
+    </script>
+</body>
+</html>

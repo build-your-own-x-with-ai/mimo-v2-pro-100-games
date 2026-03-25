@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>点击计数器</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+        }
+        .container {
+            text-align: center;
+            padding: 40px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            max-width: 500px;
+            width: 90%;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+        .score {
+            font-size: 4rem;
+            font-weight: bold;
+            margin: 30px 0;
+            text-shadow: 3px 3px 6px rgba(0,0,0,0.4);
+        }
+        .timer {
+            font-size: 1.5rem;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+        .click-area {
+            width: 200px;
+            height: 200px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            margin: 0 auto 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 3px solid rgba(255,255,255,0.5);
+            user-select: none;
+        }
+        .click-area:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+        .click-area:active {
+            transform: scale(0.95);
+        }
+        .click-area.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        button {
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid rgba(255,255,255,0.5);
+            border-radius: 30px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+        button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+        .result {
+            font-size: 1.3rem;
+            margin-top: 20px;
+            min-height: 30px;
+        }
+        .best-score {
+            font-size: 1rem;
+            margin-top: 20px;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>点击计数器</h1>
+        <div class="timer">时间: <span id="timeLeft">5</span> 秒</div>
+        <div class="score" id="score">0</div>
+        <div class="click-area" id="clickArea">点击这里!</div>
+        <div class="result" id="result"></div>
+        <button id="startBtn">开始游戏</button>
+        <button id="resetBtn">重置</button>
+        <div class="best-score">最高分: <span id="bestScore">0</span></div>
+    </div>
+
+    <script>
+        let score = 0;
+        let timeLeft = 5;
+        let gameRunning = false;
+        let timerInterval = null;
+        let bestScore = localStorage.getItem('clickCounterBest') || 0;
+        
+        const scoreDisplay = document.getElementById('score');
+        const timeLeftDisplay = document.getElementById('timeLeft');
+        const clickArea = document.getElementById('clickArea');
+        const resultDisplay = document.getElementById('result');
+        const startBtn = document.getElementById('startBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const bestScoreDisplay = document.getElementById('bestScore');
+        
+        bestScoreDisplay.textContent = bestScore;
+        
+        clickArea.addEventListener('click', () => {
+            if (!gameRunning) return;
+            score++;
+            scoreDisplay.textContent = score;
+        });
+        
+        startBtn.addEventListener('click', startGame);
+        resetBtn.addEventListener('click', resetGame);
+        
+        function startGame() {
+            if (gameRunning) return;
+            
+            score = 0;
+            timeLeft = 5;
+            gameRunning = true;
+            
+            scoreDisplay.textContent = score;
+            timeLeftDisplay.textContent = timeLeft;
+            resultDisplay.textContent = '';
+            clickArea.classList.remove('disabled');
+            startBtn.disabled = true;
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                timeLeftDisplay.textContent = timeLeft;
+                
+                if (timeLeft <= 0) {
+                    endGame();
+                }
+            }, 1000);
+        }
+        
+        function endGame() {
+            clearInterval(timerInterval);
+            gameRunning = false;
+            clickArea.classList.add('disabled');
+            startBtn.disabled = false;
+            
+            if (score > bestScore) {
+                bestScore = score;
+                localStorage.setItem('clickCounterBest', bestScore);
+                bestScoreDisplay.textContent = bestScore;
+                resultDisplay.textContent = `新纪录! 你点击了 ${score} 次!`;
+            } else {
+                resultDisplay.textContent = `游戏结束! 你点击了 ${score} 次!`;
+            }
+        }
+        
+        function resetGame() {
+            clearInterval(timerInterval);
+            gameRunning = false;
+            score = 0;
+            timeLeft = 5;
+            
+            scoreDisplay.textContent = score;
+            timeLeftDisplay.textContent = timeLeft;
+            resultDisplay.textContent = '';
+            clickArea.classList.add('disabled');
+            startBtn.disabled = false;
+        }
+        
+        // 初始化
+        clickArea.classList.add('disabled');
+    </script>
+</body>
+</html>
