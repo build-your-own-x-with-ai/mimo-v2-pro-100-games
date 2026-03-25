@@ -1,111 +1,78 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>合金弹头</title>
-    <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:Arial; background:linear-gradient(135deg,#667eea,#764ba2); min-height:100vh; display:flex; justify-content:center; align-items:center; color:white; }
-        .container { text-align:center; padding:20px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:600px; width:95%; }
-        h1 { font-size:1.8rem; margin-bottom:10px; }
-        .game-area { min-height:300px; background:rgba(0,0,0,0.3); border-radius:10px; padding:15px; margin:15px 0; }
-        canvas { display:block; margin:0 auto; background:#1a1a2e; border-radius:5px; }
-        button { padding:10px 25px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
-        button:hover { background:rgba(255,255,255,0.3); }
-        .message { font-size:1.1rem; margin-top:10px; min-height:20px; }
-        .score { font-size:0.9rem; margin-bottom:10px; }
-        .controls { margin-top:10px; }
-        .ctrl-btn { width:50px; height:50px; font-size:1.5rem; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>合金弹头</h1>
-        <div class="score">分数: <span id="score">0</span> | 最高分: <span id="best">0</span></div>
-        <div class="game-area">
-            <canvas id="gameCanvas" width="400" height="300"></canvas>
-        </div>
-        <div class="controls">
-            <button class="ctrl-btn" id="leftBtn">←</button>
-            <button class="ctrl-btn" id="upBtn">↑</button>
-            <button class="ctrl-btn" id="downBtn">↓</button>
-            <button class="ctrl-btn" id="rightBtn">→</button>
-            <button class="ctrl-btn" id="fireBtn">射击</button>
-        </div>
-        <button id="startBtn">开始游戏</button>
-        <div class="message" id="message">射击闯关</div>
-    </div>
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const scoreDisplay = document.getElementById('score');
-        const bestDisplay = document.getElementById('best');
-        const messageDisplay = document.getElementById('message');
-        const startBtn = document.getElementById('startBtn');
-        
-        let score = 0;
-        let bestScore = localStorage.getItem('game86Best') || 0;
-        let gameRunning = false;
-        let animationId = null;
-        
-        bestDisplay.textContent = bestScore;
-        
-        function addScore(n) {
-            score += n;
-            scoreDisplay.textContent = score;
-            if(score > bestScore) {
-                bestScore = score;
-                localStorage.setItem('game86Best', bestScore);
-                bestDisplay.textContent = bestScore;
-            }
-        }
-        
-        function gameOver() {
-            gameRunning = false;
-            cancelAnimationFrame(animationId);
-            messageDisplay.textContent = '游戏结束! 得分: ' + score;
-            startBtn.textContent = '重新开始';
-        }
-        
-        
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>合金弹头</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;display:flex;justify-content:center;align-items:center;color:white}.container{text-align:center;padding:20px;background:rgba(255,255,255,0.1);border-radius:20px;backdrop-filter:blur(10px);max-width:600px;width:95%}h1{font-size:1.8rem;margin-bottom:10px}.game-area{min-height:300px;background:rgba(0,0,0,0.3);border-radius:10px;padding:15px;margin:15px 0}canvas{display:block;margin:0 auto;border-radius:5px}button{padding:10px 25px;font-size:1rem;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.5);border-radius:20px;color:white;cursor:pointer;margin:5px}button:hover{background:rgba(255,255,255,0.3)}.message{font-size:1.1rem;margin-top:10px;min-height:20px;color:#51cf66}.score{font-size:0.9rem;margin-bottom:10px}.controls{margin-top:10px}.ctrl-btn{width:50px;height:50px;font-size:1.5rem}</style></head><body><div class="container"><h1>合金弹头</h1><div class="score">分数: <span id="score">0</span> | 最高分: <span id="best">0</span></div><div class="game-area"><canvas id="gameCanvas" width="400" height="300"></canvas></div><div class="controls"><button class="ctrl-btn" id="leftBtn">←</button><button class="ctrl-btn" id="upBtn">↑</button><button class="ctrl-btn" id="downBtn">↓</button><button class="ctrl-btn" id="rightBtn">→</button><button class="ctrl-btn" id="fireBtn">🔥</button></div><button id="startBtn">开始游戏</button><div class="message" id="message">横版射击闯关</div></div><script>const canvas=document.getElementById('gameCanvas'),ctx=canvas.getContext('2d'),scoreDisplay=document.getElementById('score'),bestDisplay=document.getElementById('best'),messageDisplay=document.getElementById('message'),startBtn=document.getElementById('startBtn');let score=0,bestScore=localStorage.getItem('g86Best')||0,gameRunning=false,animationId=null;bestDisplay.textContent=bestScore;function addScore(n){score+=n;scoreDisplay.textContent=score;if(score>bestScore){bestScore=score;localStorage.setItem('g86Best',bestScore);bestDisplay.textContent=bestScore;}}function gameOver(){gameRunning=false;cancelAnimationFrame(animationId);messageDisplay.textContent='游戏结束! 得分: '+score;startBtn.textContent='重新开始';}
         const W=400, H=300;
         canvas.width=W; canvas.height=H;
-        let playerX=W/2, playerY=H-40;
-        let bullets=[], enemies=[];
-        let stars = Array(50).fill().map(() => ({x:Math.random()*W, y:Math.random()*H, s:Math.random()*2+1}));
+        
+        let player = {x:80, y:H-60, hp:5, shooting:false};
+        let bullets = [];
+        let enemies = [];
+        let explosions = [];
+        let scrollX = 0;
         
         function draw() {
-            ctx.fillStyle='#0a0a1a';
+            ctx.fillStyle='#87CEEB';
             ctx.fillRect(0,0,W,H);
-            ctx.fillStyle='#fff';
-            stars.forEach(s => { ctx.fillRect(s.x,s.y,s.s,s.s); });
-            ctx.fillStyle='#3498db';
-            ctx.fillRect(playerX-12,playerY-8,24,16);
-            ctx.fillRect(playerX-2,playerY-15,4,7);
-            bullets.forEach(b => { ctx.fillStyle='#f1c40f'; ctx.fillRect(b.x-2,b.y,4,10); });
-            enemies.forEach(e => { 
-                ctx.fillStyle='#e74c3c';
-                ctx.beginPath(); ctx.arc(e.x,e.y,10,0,Math.PI*2); ctx.fill();
+            
+            ctx.fillStyle='#8B4513';
+            for(let i=0;i<20;i++) {
+                ctx.fillRect(i*50-scrollX%50, H-30, 40, 30);
+            }
+            
+            ctx.fillStyle='#2c3e50';
+            ctx.fillRect(0,H-30,W,30);
+            
+            ctx.fillStyle='#27ae60';
+            ctx.fillRect(player.x-15,player.y-20,30,25);
+            ctx.fillStyle='#f1c40f';
+            ctx.fillRect(player.x+10,player.y-10,15,5);
+            
+            ctx.fillStyle='#f1c40f';
+            bullets.forEach(b => ctx.fillRect(b.x-scrollX,b.y,10,4));
+            
+            ctx.fillStyle='#e74c3c';
+            enemies.forEach(e => ctx.fillRect(e.x-scrollX-12,e.y-15,24,30));
+            
+            ctx.fillStyle='#f39c12';
+            explosions.forEach(e => {
+                ctx.beginPath();
+                ctx.arc(e.x-scrollX,e.y,e.r,0,Math.PI*2);
+                ctx.fill();
             });
+            
+            ctx.fillStyle='#fff';
+            ctx.fillText('HP: '+'❤️'.repeat(player.hp),10,20);
+            ctx.fillText('距离: '+Math.floor(scrollX/10)+'m',10,35);
         }
         
         function update() {
-            stars.forEach(s => { s.y+=s.s*0.5; if(s.y>H) s.y=0; });
-            bullets.forEach(b => b.y-=8);
-            bullets = bullets.filter(b => b.y>0);
-            if(Math.random()<0.03) enemies.push({x:Math.random()*(W-40)+20, y:0, dy:Math.random()*2+1});
+            scrollX += 2;
+            
+            bullets.forEach(b => b.x+=10);
+            bullets = bullets.filter(b => b.x<scrollX+W);
+            
+            if(Math.random()<0.03) enemies.push({x:scrollX+W+20, y:H-45, hp:2});
+            
             enemies.forEach(e => {
-                e.y+=e.dy;
                 bullets.forEach(b => {
-                    if(Math.abs(b.x-e.x)<12&&Math.abs(b.y-e.y)<12) { e.y=H+20; b.y=-10; addScore(10); }
+                    if(Math.abs(b.x-e.x)<15&&Math.abs(b.y-e.y)<20) {
+                        e.hp--; b.x=-100;
+                        if(e.hp<=0) { explosions.push({x:e.x,y:e.y,r:20}); e.x=-1000; addScore(30); }
+                    }
                 });
+                if(Math.abs(player.x+scrollX-e.x)<25&&Math.abs(player.y-e.y)<25) {
+                    e.x=-1000; player.hp--;
+                    if(player.hp<=0) gameOver();
+                }
             });
-            enemies = enemies.filter(e => e.y<H+10);
+            
+            enemies = enemies.filter(e => e.x>scrollX-50);
+            explosions.forEach(e => e.r+=2);
+            explosions = explosions.filter(e => e.r<40);
+            
+            if(scrollX>3000) { messageDisplay.textContent='通关!'; gameOver(); }
         }
         
         function initGame() {
-            playerX=W/2; bullets=[]; enemies=[];
+            player={x:80,y:H-60,hp:5}; bullets=[]; enemies=[]; explosions=[]; scrollX=0;
             if(animationId) cancelAnimationFrame(animationId);
             gameLoop();
         }
@@ -113,32 +80,17 @@
         function gameLoop() {
             if(!gameRunning) return;
             update(); draw();
-            animationId = requestAnimationFrame(gameLoop);
+            animationId=requestAnimationFrame(gameLoop);
         }
         
-        function fire() { if(gameRunning) bullets.push({x:playerX, y:playerY-15}); }
-        document.addEventListener('keydown', e => {
-            if(e.key==='ArrowLeft') playerX=Math.max(15,playerX-12);
-            if(e.key==='ArrowRight') playerX=Math.min(W-15,playerX+12);
-            if(e.key==='ArrowUp') playerY=Math.max(50,playerY-10);
-            if(e.key==='ArrowDown') playerY=Math.min(H-20,playerY+10);
+        function fire() { if(gameRunning) bullets.push({x:player.x+scrollX+15,y:player.y-5}); }
+        
+        document.addEventListener('keydown',e=>{
+            if(e.key==='ArrowUp') player.y=Math.max(50,player.y-10);
+            if(e.key==='ArrowDown') player.y=Math.min(H-40,player.y+10);
             if(e.key===' ') fire();
         });
-        document.getElementById('leftBtn').addEventListener('click', () => playerX=Math.max(15,playerX-12));
-        document.getElementById('rightBtn').addEventListener('click', () => playerX=Math.min(W-15,playerX+12));
-        document.getElementById('upBtn').addEventListener('click', () => playerY=Math.max(50,playerY-10));
-        document.getElementById('downBtn').addEventListener('click', () => playerY=Math.min(H-20,playerY+10));
-        document.getElementById('fireBtn').addEventListener('click', fire);
-    
-        
-        startBtn.addEventListener('click', () => {
-            score = 0;
-            scoreDisplay.textContent = score;
-            gameRunning = true;
-            messageDisplay.textContent = '游戏进行中...';
-            startBtn.textContent = '重新开始';
-            initGame();
-        });
-    </script>
-</body>
-</html>
+        document.getElementById('upBtn').onclick=()=>player.y=Math.max(50,player.y-10);
+        document.getElementById('downBtn').onclick=()=>player.y=Math.min(H-40,player.y+10);
+        document.getElementById('fireBtn').onclick=fire;
+    startBtn.addEventListener('click',()=>{score=0;scoreDisplay.textContent=score;gameRunning=true;messageDisplay.textContent='游戏进行中...';startBtn.textContent='重新开始';initGame();});</script></body></html>

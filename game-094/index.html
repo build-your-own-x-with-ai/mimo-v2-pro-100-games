@@ -1,275 +1,71 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大蜜蜂</title>
-    <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:Arial; background:linear-gradient(135deg,#667eea,#764ba2); min-height:100vh; display:flex; justify-content:center; align-items:center; color:white; }
-        .container { text-align:center; padding:20px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:600px; width:95%; }
-        h1 { font-size:1.8rem; margin-bottom:10px; }
-        .game-area { min-height:300px; background:rgba(0,0,0,0.3); border-radius:10px; padding:15px; margin:15px 0; }
-        canvas { display:block; margin:0 auto; background:#87CEEB; border-radius:5px; }
-        button { padding:10px 25px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
-        button:hover { background:rgba(255,255,255,0.3); }
-        .message { font-size:1.1rem; margin-top:10px; min-height:20px; }
-        .score { font-size:0.9rem; margin-bottom:10px; }
-        .controls { margin-top:10px; }
-        .ctrl-btn { width:50px; height:50px; font-size:1.5rem; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>大蜜蜂</h1>
-        <div class="score">花蜜: <span id="score">0</span> | 最高分: <span id="best">0</span></div>
-        <div class="game-area">
-            <canvas id="gameCanvas" width="400" height="300"></canvas>
-        </div>
-        <div class="controls">
-            <button class="ctrl-btn" id="leftBtn">←</button>
-            <button class="ctrl-btn" id="upBtn">↑</button>
-            <button class="ctrl-btn" id="downBtn">↓</button>
-            <button class="ctrl-btn" id="rightBtn">→</button>
-        </div>
-        <button id="startBtn">开始游戏</button>
-        <div class="message" id="message">控制蜜蜂收集花蜜</div>
-    </div>
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const scoreDisplay = document.getElementById('score');
-        const bestDisplay = document.getElementById('best');
-        const messageDisplay = document.getElementById('message');
-        const startBtn = document.getElementById('startBtn');
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>大蜜蜂</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;display:flex;justify-content:center;align-items:center;color:white}.container{text-align:center;padding:20px;background:rgba(255,255,255,0.1);border-radius:20px;backdrop-filter:blur(10px);max-width:600px;width:95%}h1{font-size:1.8rem;margin-bottom:10px}.game-area{min-height:300px;background:rgba(0,0,0,0.3);border-radius:10px;padding:15px;margin:15px 0}canvas{display:block;margin:0 auto;border-radius:5px}button{padding:10px 25px;font-size:1rem;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.5);border-radius:20px;color:white;cursor:pointer;margin:5px}button:hover{background:rgba(255,255,255,0.3)}.message{font-size:1.1rem;margin-top:10px;min-height:20px;color:#51cf66}.score{font-size:0.9rem;margin-bottom:10px}.controls{margin-top:10px}.ctrl-btn{width:50px;height:50px;font-size:1.5rem}</style></head><body><div class="container"><h1>大蜜蜂</h1><div class="score">分数: <span id="score">0</span> | 最高分: <span id="best">0</span></div><div class="game-area"><canvas id="gameCanvas" width="400" height="300"></canvas></div><div class="controls"><button class="ctrl-btn" id="leftBtn">←</button><button class="ctrl-btn" id="upBtn">↑</button><button class="ctrl-btn" id="downBtn">↓</button><button class="ctrl-btn" id="rightBtn">→</button><button class="ctrl-btn" id="fireBtn">🔥</button></div><button id="startBtn">开始游戏</button><div class="message" id="message">采集花蜜</div></div><script>const canvas=document.getElementById('gameCanvas'),ctx=canvas.getContext('2d'),scoreDisplay=document.getElementById('score'),bestDisplay=document.getElementById('best'),messageDisplay=document.getElementById('message'),startBtn=document.getElementById('startBtn');let score=0,bestScore=localStorage.getItem('g94Best')||0,gameRunning=false,animationId=null;bestDisplay.textContent=bestScore;function addScore(n){score+=n;scoreDisplay.textContent=score;if(score>bestScore){bestScore=score;localStorage.setItem('g94Best',bestScore);bestDisplay.textContent=bestScore;}}function gameOver(){gameRunning=false;cancelAnimationFrame(animationId);messageDisplay.textContent='游戏结束! 得分: '+score;startBtn.textContent='重新开始';}
+        const W=400, H=300;
+        canvas.width=W; canvas.height=H;
         
-        let score = 0;
-        let bestScore = localStorage.getItem('beeBest') || 0;
-        let gameRunning = false;
-        let animationId = null;
-        
-        const W = 400, H = 300;
-        canvas.width = W;
-        canvas.height = H;
-        
-        let bee = { x: W / 2, y: H / 2, size: 20 };
+        let bee = {x:W/2, y:H/2};
         let flowers = [];
         let clouds = [];
-        let timeLeft = 60;
-        let timerInterval = null;
+        let time = 60;
         
-        bestDisplay.textContent = bestScore;
-        
-        function addScore(n) {
-            score += n;
-            scoreDisplay.textContent = score;
-            if (score > bestScore) {
-                bestScore = score;
-                localStorage.setItem('beeBest', bestScore);
-                bestDisplay.textContent = bestScore;
-            }
-        }
-        
-        function createFlowers() {
-            flowers = [];
-            for (let i = 0; i < 10; i++) {
-                flowers.push({
-                    x: Math.random() * (W - 40) + 20,
-                    y: Math.random() * (H - 100) + 50,
-                    size: 15 + Math.random() * 10,
-                    color: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7'][Math.floor(Math.random() * 5)],
-                    hasNectar: true
-                });
-            }
-        }
-        
-        function createClouds() {
-            clouds = [];
-            for (let i = 0; i < 5; i++) {
-                clouds.push({
-                    x: Math.random() * W,
-                    y: Math.random() * 100,
-                    size: 30 + Math.random() * 20,
-                    speed: 0.5 + Math.random() * 0.5
-                });
-            }
-        }
+        for(let i=0;i<8;i++) flowers.push({x:Math.random()*350+25,y:Math.random()*200+50,hasNectar:true});
+        for(let i=0;i<5;i++) clouds.push({x:Math.random()*W,y:Math.random()*80,s:30+Math.random()*20});
         
         function draw() {
-            // 天空背景
-            ctx.fillStyle = '#87CEEB';
-            ctx.fillRect(0, 0, W, H);
+            ctx.fillStyle='#87CEEB';
+            ctx.fillRect(0,0,W,H);
             
-            // 绘制云朵
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
-            clouds.forEach(c => {
-                ctx.beginPath();
-                ctx.arc(c.x, c.y, c.size, 0, Math.PI * 2);
-                ctx.arc(c.x + c.size * 0.8, c.y - c.size * 0.3, c.size * 0.7, 0, Math.PI * 2);
-                ctx.arc(c.x + c.size * 1.5, c.y, c.size * 0.8, 0, Math.PI * 2);
-                ctx.fill();
-            });
+            ctx.fillStyle='rgba(255,255,255,0.8)';
+            clouds.forEach(c=>{ctx.beginPath();ctx.arc(c.x,c.y,c.s,0,Math.PI*2);ctx.fill();});
             
-            // 绘制花朵
-            flowers.forEach(f => {
-                if (f.hasNectar) {
-                    // 花茎
-                    ctx.fillStyle = '#228B22';
-                    ctx.fillRect(f.x - 2, f.y, 4, 20);
-                    
-                    // 花朵
-                    ctx.fillStyle = f.color;
-                    for (let i = 0; i < 5; i++) {
-                        ctx.beginPath();
-                        const angle = (i / 5) * Math.PI * 2;
-                        ctx.arc(
-                            f.x + Math.cos(angle) * f.size * 0.4,
-                            f.y + Math.sin(angle) * f.size * 0.4,
-                            f.size * 0.3,
-                            0, Math.PI * 2
-                        );
-                        ctx.fill();
-                    }
-                    
-                    // 花蕊
-                    ctx.fillStyle = '#FFD700';
-                    ctx.beginPath();
-                    ctx.arc(f.x, f.y, f.size * 0.25, 0, Math.PI * 2);
-                    ctx.fill();
+            flowers.forEach(f=>{
+                if(f.hasNectar){
+                    ctx.fillStyle='#228B22';ctx.fillRect(f.x-2,f.y,4,15);
+                    ctx.fillStyle=['#FF6B6B','#4ECDC4','#FFEAA7','#96CEB4'][Math.floor(Math.random()*4)];
+                    ctx.beginPath();ctx.arc(f.x,f.y,12,0,Math.PI*2);ctx.fill();
+                    ctx.fillStyle='#FFD700';ctx.beginPath();ctx.arc(f.x,f.y,5,0,Math.PI*2);ctx.fill();
                 }
             });
             
-            // 绘制蜜蜂
-            ctx.fillStyle = '#FFD700';
-            ctx.beginPath();
-            ctx.ellipse(bee.x, bee.y, bee.size, bee.size * 0.7, 0, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.fillStyle='#FFD700';
+            ctx.beginPath();ctx.ellipse(bee.x,bee.y,15,10,0,0,Math.PI*2);ctx.fill();
+            ctx.fillStyle='#000';
+            ctx.fillRect(bee.x-8,bee.y-3,4,6);ctx.fillRect(bee.x+4,bee.y-3,4,6);
+            ctx.fillStyle='rgba(255,255,255,0.7)';
+            ctx.beginPath();ctx.ellipse(bee.x-10,bee.y-8,8,5,-0.5,0,Math.PI*2);ctx.ellipse(bee.x+10,bee.y-8,8,5,0.5,0,Math.PI*2);ctx.fill();
             
-            // 蜜蜂条纹
-            ctx.fillStyle = '#000';
-            ctx.fillRect(bee.x - bee.size * 0.8, bee.y - bee.size * 0.2, bee.size * 0.3, bee.size * 0.4);
-            ctx.fillRect(bee.x - bee.size * 0.2, bee.y - bee.size * 0.2, bee.size * 0.3, bee.size * 0.4);
-            ctx.fillRect(bee.x + bee.size * 0.4, bee.y - bee.size * 0.2, bee.size * 0.3, bee.size * 0.4);
-            
-            // 蜜蜂眼睛
-            ctx.fillStyle = '#000';
-            ctx.beginPath();
-            ctx.arc(bee.x - bee.size * 0.3, bee.y - bee.size * 0.1, 3, 0, Math.PI * 2);
-            ctx.arc(bee.x + bee.size * 0.3, bee.y - bee.size * 0.1, 3, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // 蜜蜂翅膀
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-            ctx.beginPath();
-            ctx.ellipse(bee.x - bee.size * 0.5, bee.y - bee.size * 0.5, bee.size * 0.5, bee.size * 0.3, -0.5, 0, Math.PI * 2);
-            ctx.ellipse(bee.x + bee.size * 0.5, bee.y - bee.size * 0.5, bee.size * 0.5, bee.size * 0.3, 0.5, 0, Math.PI * 2);
-            ctx.fill();
-            
-            // 时间显示
-            ctx.fillStyle = '#000';
-            ctx.font = '16px Arial';
-            ctx.fillText('时间: ' + timeLeft + '秒', 10, 25);
+            ctx.fillStyle='#000';ctx.font='16px Arial';
+            ctx.fillText('时间: '+time+'s | 花蜜: '+score,10,25);
         }
         
         function update() {
-            // 更新云朵
-            clouds.forEach(c => {
-                c.x += c.speed;
-                if (c.x > W + c.size) c.x = -c.size * 2;
-            });
-            
-            // 检查蜜蜂是否采到花蜜
-            flowers.forEach(f => {
-                if (f.hasNectar) {
-                    const dx = bee.x - f.x;
-                    const dy = bee.y - f.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (dist < bee.size + f.size * 0.5) {
-                        f.hasNectar = false;
-                        addScore(10);
-                        
-                        // 花朵重新生长
-                        setTimeout(() => {
-                            f.x = Math.random() * (W - 40) + 20;
-                            f.y = Math.random() * (H - 100) + 50;
-                            f.hasNectar = true;
-                        }, 3000);
-                    }
+            clouds.forEach(c=>{c.x+=0.5;if(c.x>W+50)c.x=-50;});
+            flowers.forEach(f=>{
+                if(f.hasNectar&&Math.abs(bee.x-f.x)<20&&Math.abs(bee.y-f.y)<20){
+                    f.hasNectar=false;addScore(10);
+                    setTimeout(()=>{f.x=Math.random()*350+25;f.y=Math.random()*200+50;f.hasNectar=true;},3000);
                 }
             });
         }
         
-        function initGame() {
-            bee.x = W / 2;
-            bee.y = H / 2;
-            score = 0;
-            timeLeft = 60;
-            scoreDisplay.textContent = score;
-            
-            createFlowers();
-            createClouds();
-            
-            if (animationId) cancelAnimationFrame(animationId);
-            if (timerInterval) clearInterval(timerInterval);
-            
-            timerInterval = setInterval(() => {
-                if (gameRunning) {
-                    timeLeft--;
-                    if (timeLeft <= 0) {
-                        gameOver();
-                    }
-                }
-            }, 1000);
-            
+        function initGame(){
+            bee={x:W/2,y:H/2};flowers=[];time=60;
+            for(let i=0;i<8;i++)flowers.push({x:Math.random()*350+25,y:Math.random()*200+50,hasNectar:true});
+            if(animationId)cancelAnimationFrame(animationId);
+            if(window.timer)clearInterval(window.timer);
+            window.timer=setInterval(()=>{if(gameRunning){time--;if(time<=0){messageDisplay.textContent='时间到! 采集: '+score;gameOver();}}},1000);
             gameLoop();
         }
         
-        function gameLoop() {
-            if (!gameRunning) return;
-            update();
-            draw();
-            animationId = requestAnimationFrame(gameLoop);
-        }
+        function gameLoop(){if(!gameRunning)return;update();draw();animationId=requestAnimationFrame(gameLoop);}
         
-        function gameOver() {
-            gameRunning = false;
-            cancelAnimationFrame(animationId);
-            clearInterval(timerInterval);
-            messageDisplay.textContent = '游戏结束! 收集了 ' + score + ' 份花蜜!';
-            startBtn.textContent = '重新开始';
-        }
-        
-        document.addEventListener('keydown', e => {
-            if (!gameRunning) return;
-            const speed = 10;
-            if (e.key === 'ArrowLeft') bee.x = Math.max(bee.size, bee.x - speed);
-            if (e.key === 'ArrowRight') bee.x = Math.min(W - bee.size, bee.x + speed);
-            if (e.key === 'ArrowUp') bee.y = Math.max(bee.size, bee.y - speed);
-            if (e.key === 'ArrowDown') bee.y = Math.min(H - bee.size, bee.y + speed);
+        document.addEventListener('keydown',e=>{
+            if(e.key==='ArrowLeft')bee.x=Math.max(15,bee.x-8);
+            if(e.key==='ArrowRight')bee.x=Math.min(W-15,bee.x+8);
+            if(e.key==='ArrowUp')bee.y=Math.max(15,bee.y-8);
+            if(e.key==='ArrowDown')bee.y=Math.min(H-15,bee.y+8);
         });
-        
-        document.getElementById('leftBtn').addEventListener('click', () => {
-            if (gameRunning) bee.x = Math.max(bee.size, bee.x - 10);
-        });
-        document.getElementById('rightBtn').addEventListener('click', () => {
-            if (gameRunning) bee.x = Math.min(W - bee.size, bee.x + 10);
-        });
-        document.getElementById('upBtn').addEventListener('click', () => {
-            if (gameRunning) bee.y = Math.max(bee.size, bee.y - 10);
-        });
-        document.getElementById('downBtn').addEventListener('click', () => {
-            if (gameRunning) bee.y = Math.min(H - bee.size, bee.y + 10);
-        });
-        
-        startBtn.addEventListener('click', () => {
-            score = 0;
-            scoreDisplay.textContent = score;
-            gameRunning = true;
-            messageDisplay.textContent = '游戏进行中...';
-            startBtn.textContent = '重新开始';
-            initGame();
-        });
-    </script>
-</body>
-</html>
+        document.getElementById('leftBtn').onclick=()=>bee.x=Math.max(15,bee.x-8);
+        document.getElementById('rightBtn').onclick=()=>bee.x=Math.min(W-15,bee.x+8);
+        document.getElementById('upBtn').onclick=()=>bee.y=Math.max(15,bee.y-8);
+        document.getElementById('downBtn').onclick=()=>bee.y=Math.min(H-15,bee.y+8);
+    startBtn.addEventListener('click',()=>{score=0;scoreDisplay.textContent=score;gameRunning=true;messageDisplay.textContent='游戏进行中...';startBtn.textContent='重新开始';initGame();});</script></body></html>

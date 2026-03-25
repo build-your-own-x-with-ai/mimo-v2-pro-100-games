@@ -1,144 +1,65 @@
-<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>沙罗曼蛇</title>
-    <style>
-        * { margin:0; padding:0; box-sizing:border-box; }
-        body { font-family:Arial; background:linear-gradient(135deg,#667eea,#764ba2); min-height:100vh; display:flex; justify-content:center; align-items:center; color:white; }
-        .container { text-align:center; padding:20px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:600px; width:95%; }
-        h1 { font-size:1.8rem; margin-bottom:10px; }
-        .game-area { min-height:300px; background:rgba(0,0,0,0.3); border-radius:10px; padding:15px; margin:15px 0; }
-        canvas { display:block; margin:0 auto; background:#1a1a2e; border-radius:5px; }
-        button { padding:10px 25px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
-        button:hover { background:rgba(255,255,255,0.3); }
-        .message { font-size:1.1rem; margin-top:10px; min-height:20px; }
-        .score { font-size:0.9rem; margin-bottom:10px; }
-        .controls { margin-top:10px; }
-        .ctrl-btn { width:50px; height:50px; font-size:1.5rem; }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1>沙罗曼蛇</h1>
-        <div class="score">分数: <span id="score">0</span> | 最高分: <span id="best">0</span></div>
-        <div class="game-area">
-            <canvas id="gameCanvas" width="400" height="300"></canvas>
-        </div>
-        <div class="controls">
-            <button class="ctrl-btn" id="leftBtn">←</button>
-            <button class="ctrl-btn" id="upBtn">↑</button>
-            <button class="ctrl-btn" id="downBtn">↓</button>
-            <button class="ctrl-btn" id="rightBtn">→</button>
-            <button class="ctrl-btn" id="fireBtn">射击</button>
-        </div>
-        <button id="startBtn">开始游戏</button>
-        <div class="message" id="message">太空射击</div>
-    </div>
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const scoreDisplay = document.getElementById('score');
-        const bestDisplay = document.getElementById('best');
-        const messageDisplay = document.getElementById('message');
-        const startBtn = document.getElementById('startBtn');
-        
-        let score = 0;
-        let bestScore = localStorage.getItem('game90Best') || 0;
-        let gameRunning = false;
-        let animationId = null;
-        
-        bestDisplay.textContent = bestScore;
-        
-        function addScore(n) {
-            score += n;
-            scoreDisplay.textContent = score;
-            if(score > bestScore) {
-                bestScore = score;
-                localStorage.setItem('game90Best', bestScore);
-                bestDisplay.textContent = bestScore;
-            }
-        }
-        
-        function gameOver() {
-            gameRunning = false;
-            cancelAnimationFrame(animationId);
-            messageDisplay.textContent = '游戏结束! 得分: ' + score;
-            startBtn.textContent = '重新开始';
-        }
-        
-        
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>沙罗曼蛇</title><style>*{margin:0;padding:0;box-sizing:border-box}body{font-family:Arial;background:linear-gradient(135deg,#667eea,#764ba2);min-height:100vh;display:flex;justify-content:center;align-items:center;color:white}.container{text-align:center;padding:20px;background:rgba(255,255,255,0.1);border-radius:20px;backdrop-filter:blur(10px);max-width:600px;width:95%}h1{font-size:1.8rem;margin-bottom:10px}.game-area{min-height:300px;background:rgba(0,0,0,0.3);border-radius:10px;padding:15px;margin:15px 0}canvas{display:block;margin:0 auto;border-radius:5px}button{padding:10px 25px;font-size:1rem;background:rgba(255,255,255,0.2);border:2px solid rgba(255,255,255,0.5);border-radius:20px;color:white;cursor:pointer;margin:5px}button:hover{background:rgba(255,255,255,0.3)}.message{font-size:1.1rem;margin-top:10px;min-height:20px;color:#51cf66}.score{font-size:0.9rem;margin-bottom:10px}.controls{margin-top:10px}.ctrl-btn{width:50px;height:50px;font-size:1.5rem}</style></head><body><div class="container"><h1>沙罗曼蛇</h1><div class="score">分数: <span id="score">0</span> | 最高分: <span id="best">0</span></div><div class="game-area"><canvas id="gameCanvas" width="400" height="300"></canvas></div><div class="controls"><button class="ctrl-btn" id="leftBtn">←</button><button class="ctrl-btn" id="upBtn">↑</button><button class="ctrl-btn" id="downBtn">↓</button><button class="ctrl-btn" id="rightBtn">→</button><button class="ctrl-btn" id="fireBtn">🔥</button></div><button id="startBtn">开始游戏</button><div class="message" id="message">横版射击</div></div><script>const canvas=document.getElementById('gameCanvas'),ctx=canvas.getContext('2d'),scoreDisplay=document.getElementById('score'),bestDisplay=document.getElementById('best'),messageDisplay=document.getElementById('message'),startBtn=document.getElementById('startBtn');let score=0,bestScore=localStorage.getItem('g90Best')||0,gameRunning=false,animationId=null;bestDisplay.textContent=bestScore;function addScore(n){score+=n;scoreDisplay.textContent=score;if(score>bestScore){bestScore=score;localStorage.setItem('g90Best',bestScore);bestDisplay.textContent=bestScore;}}function gameOver(){gameRunning=false;cancelAnimationFrame(animationId);messageDisplay.textContent='游戏结束! 得分: '+score;startBtn.textContent='重新开始';}
         const W=400, H=300;
         canvas.width=W; canvas.height=H;
-        let playerX=W/2, playerY=H-40;
-        let bullets=[], enemies=[];
-        let stars = Array(50).fill().map(() => ({x:Math.random()*W, y:Math.random()*H, s:Math.random()*2+1}));
+        
+        let player = {x:50, y:H/2, hp:3};
+        let bullets = [];
+        let enemies = [];
+        let scrollX = 0;
         
         function draw() {
-            ctx.fillStyle='#0a0a1a';
+            ctx.fillStyle='#0a0a2e';
             ctx.fillRect(0,0,W,H);
-            ctx.fillStyle='#fff';
-            stars.forEach(s => { ctx.fillRect(s.x,s.y,s.s,s.s); });
+            
+            for(let i=0;i<10;i++){
+                ctx.fillStyle='#34495e';
+                ctx.fillRect(i*80-scrollX%80,0,40,H);
+            }
+            
             ctx.fillStyle='#3498db';
-            ctx.fillRect(playerX-12,playerY-8,24,16);
-            ctx.fillRect(playerX-2,playerY-15,4,7);
-            bullets.forEach(b => { ctx.fillStyle='#f1c40f'; ctx.fillRect(b.x-2,b.y,4,10); });
-            enemies.forEach(e => { 
-                ctx.fillStyle='#e74c3c';
-                ctx.beginPath(); ctx.arc(e.x,e.y,10,0,Math.PI*2); ctx.fill();
-            });
+            ctx.fillRect(player.x-12,player.y-8,24,16);
+            ctx.fillRect(player.x+12,player.y-3,15,6);
+            
+            ctx.fillStyle='#f1c40f';
+            bullets.forEach(b=>ctx.fillRect(b.x,b.y-2,10,4));
+            
+            ctx.fillStyle='#e74c3c';
+            enemies.forEach(e=>ctx.fillRect(e.x-10,e.y-10,20,20));
+            
+            ctx.fillStyle='#fff';
+            ctx.fillText('HP: '+'❤️'.repeat(player.hp),10,20);
+            ctx.fillText('距离: '+Math.floor(scrollX/10),10,35);
         }
         
         function update() {
-            stars.forEach(s => { s.y+=s.s*0.5; if(s.y>H) s.y=0; });
-            bullets.forEach(b => b.y-=8);
-            bullets = bullets.filter(b => b.y>0);
-            if(Math.random()<0.03) enemies.push({x:Math.random()*(W-40)+20, y:0, dy:Math.random()*2+1});
-            enemies.forEach(e => {
-                e.y+=e.dy;
-                bullets.forEach(b => {
-                    if(Math.abs(b.x-e.x)<12&&Math.abs(b.y-e.y)<12) { e.y=H+20; b.y=-10; addScore(10); }
-                });
+            scrollX+=2;
+            bullets.forEach(b=>b.x+=8);bullets=bullets.filter(b=>b.x<W);
+            
+            if(Math.random()<0.03)enemies.push({x:W+20,y:Math.random()*H});
+            enemies.forEach(e=>{
+                e.x-=3;
+                bullets.forEach(b=>{if(Math.abs(b.x-e.x)<12&&Math.abs(b.y-e.y)<12){e.x=-100;b.x=-100;addScore(20);}});
+                if(Math.abs(player.x-e.x)<20&&Math.abs(player.y-e.y)<15){e.x=-100;player.hp--;if(player.hp<=0)gameOver();}
             });
-            enemies = enemies.filter(e => e.y<H+10);
+            enemies=enemies.filter(e=>e.x>-50);
+            
+            if(scrollX>2000){messageDisplay.textContent='通关!';gameOver();}
         }
         
-        function initGame() {
-            playerX=W/2; bullets=[]; enemies=[];
-            if(animationId) cancelAnimationFrame(animationId);
-            gameLoop();
-        }
+        function initGame(){player={x:50,y:H/2,hp:3};bullets=[];enemies=[];scrollX=0;if(animationId)cancelAnimationFrame(animationId);gameLoop();}
+        function gameLoop(){if(!gameRunning)return;update();draw();animationId=requestAnimationFrame(gameLoop);}
+        function fire(){if(gameRunning)bullets.push({x:player.x+15,y:player.y});}
         
-        function gameLoop() {
-            if(!gameRunning) return;
-            update(); draw();
-            animationId = requestAnimationFrame(gameLoop);
-        }
-        
-        function fire() { if(gameRunning) bullets.push({x:playerX, y:playerY-15}); }
-        document.addEventListener('keydown', e => {
-            if(e.key==='ArrowLeft') playerX=Math.max(15,playerX-12);
-            if(e.key==='ArrowRight') playerX=Math.min(W-15,playerX+12);
-            if(e.key==='ArrowUp') playerY=Math.max(50,playerY-10);
-            if(e.key==='ArrowDown') playerY=Math.min(H-20,playerY+10);
-            if(e.key===' ') fire();
+        document.addEventListener('keydown',e=>{
+            if(e.key==='ArrowLeft')player.x=Math.max(20,player.x-8);
+            if(e.key==='ArrowRight')player.x=Math.min(W-20,player.x+8);
+            if(e.key==='ArrowUp')player.y=Math.max(20,player.y-8);
+            if(e.key==='ArrowDown')player.y=Math.min(H-20,player.y+8);
+            if(e.key===' ')fire();
         });
-        document.getElementById('leftBtn').addEventListener('click', () => playerX=Math.max(15,playerX-12));
-        document.getElementById('rightBtn').addEventListener('click', () => playerX=Math.min(W-15,playerX+12));
-        document.getElementById('upBtn').addEventListener('click', () => playerY=Math.max(50,playerY-10));
-        document.getElementById('downBtn').addEventListener('click', () => playerY=Math.min(H-20,playerY+10));
-        document.getElementById('fireBtn').addEventListener('click', fire);
-    
-        
-        startBtn.addEventListener('click', () => {
-            score = 0;
-            scoreDisplay.textContent = score;
-            gameRunning = true;
-            messageDisplay.textContent = '游戏进行中...';
-            startBtn.textContent = '重新开始';
-            initGame();
-        });
-    </script>
-</body>
-</html>
+        document.getElementById('leftBtn').onclick=()=>player.x=Math.max(20,player.x-8);
+        document.getElementById('rightBtn').onclick=()=>player.x=Math.min(W-20,player.x+8);
+        document.getElementById('upBtn').onclick=()=>player.y=Math.max(20,player.y-8);
+        document.getElementById('downBtn').onclick=()=>player.y=Math.min(H-20,player.y+8);
+        document.getElementById('fireBtn').onclick=fire;
+    startBtn.addEventListener('click',()=>{score=0;scoreDisplay.textContent=score;gameRunning=true;messageDisplay.textContent='游戏进行中...';startBtn.textContent='重新开始';initGame();});</script></body></html>
