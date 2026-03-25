@@ -9,10 +9,10 @@
         body { font-family:Arial; background:linear-gradient(135deg,#667eea,#764ba2); min-height:100vh; display:flex; justify-content:center; align-items:center; color:white; }
         .container { text-align:center; padding:20px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:600px; width:95%; }
         h1 { font-size:1.8rem; margin-bottom:10px; }
-        .game-area { min-height:150px; background:rgba(255,255,255,0.15); border-radius:10px; padding:15px; margin:15px 0; }
-        button { padding:10px 25px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
+        .game-area { min-height:200px; background:rgba(255,255,255,0.15); border-radius:10px; padding:15px; margin:15px 0; }
+        button { padding:10px 20px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
         button:hover { background:rgba(255,255,255,0.3); }
-        .message { font-size:1.1rem; margin-top:10px; min-height:20px; }
+        .message { font-size:1.1rem; margin-top:10px; min-height:20px; color:#51cf66; }
         .score { font-size:0.9rem; margin-bottom:10px; }
     </style>
 </head>
@@ -22,7 +22,6 @@
         <div class="score">分数: <span id="score">0</span></div>
         <div class="game-area">
             <p>简化版中国象棋</p>
-            
         </div>
         <button onclick="location.reload()">重新开始</button>
         <div class="message" id="message"></div>
@@ -33,6 +32,54 @@
         const scoreDisplay = document.getElementById('score');
         function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
+        const pieces = {'車':'車','馬':'馬','象':'象','士':'士','將':'將','砲':'砲','卒':'卒','车':'车','马':'马','相':'相','仕':'仕','帅':'帅','炮':'炮','兵':'兵'};
+        let board = [
+            ['车','马','相','仕','帅','仕','相','马','车'],
+            [' ',' ',' ',' ',' ',' ',' ',' ',' '],
+            [' ','炮',' ',' ',' ',' ',' ','炮',' '],
+            ['兵',' ','兵',' ','兵',' ','兵',' ','兵'],
+            [' ',' ',' ',' ',' ',' ',' ',' ',' '],
+            [' ',' ',' ',' ',' ',' ',' ',' ',' '],
+            ['兵',' ','兵',' ','兵',' ','兵',' ','兵'],
+            [' ','炮',' ',' ',' ',' ',' ','炮',' '],
+            [' ',' ',' ',' ',' ',' ',' ',' ',' '],
+            ['车','马','象','士','将','士','象','马','车']
+        ];
+        let selected = null;
+        
+        const boardDiv = document.createElement('div');
+        boardDiv.style.cssText = 'display:grid;grid-template-columns:repeat(9,35px);background:#deb887;padding:5px;margin:10px auto;width:fit-content;';
+        
+        function render() {
+            boardDiv.innerHTML = '';
+            for(let r=0;r<10;r++) for(let c=0;c<9;c++) {
+                const cell = document.createElement('div');
+                cell.style.cssText = 'width:35px;height:35px;border:1px solid #8b4513;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;';
+                if(board[r][c]!==' ') {
+                    cell.textContent = board[r][c];
+                    cell.style.color = r<5?'#c0392b':'#2c3e50';
+                }
+                if(selected&&selected.r===r&&selected.c===c) cell.style.background='#f1c40f';
+                cell.onclick = () => move(r,c);
+                boardDiv.appendChild(cell);
+            }
+        }
+        
+        function move(r,c) {
+            if(selected) {
+                board[r][c] = board[selected.r][selected.c];
+                board[selected.r][selected.c] = ' ';
+                selected = null;
+                addScore(5);
+            } else if(board[r][c]!==' ') {
+                selected = {r,c};
+            }
+            render();
+        }
+        
+        render();
+        document.querySelector('.game-area').appendChild(boardDiv);
+    
     </script>
 </body>
 </html>

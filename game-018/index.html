@@ -7,13 +7,14 @@
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:Arial; background:linear-gradient(135deg,#667eea,#764ba2); min-height:100vh; display:flex; justify-content:center; align-items:center; color:white; }
-        .container { text-align:center; padding:30px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:500px; width:90%; }
-        h1 { font-size:2rem; margin-bottom:15px; }
-        .game-area { min-height:200px; background:rgba(255,255,255,0.2); border-radius:10px; padding:20px; margin:20px 0; }
-        button { padding:12px 30px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:25px; color:white; cursor:pointer; margin:5px; }
+        .container { text-align:center; padding:20px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:500px; width:90%; }
+        h1 { font-size:1.8rem; margin-bottom:10px; }
+        .game-area { min-height:200px; background:rgba(255,255,255,0.15); border-radius:10px; padding:15px; margin:15px 0; }
+        button { padding:10px 20px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
         button:hover { background:rgba(255,255,255,0.3); }
-        .message { font-size:1.2rem; margin-top:15px; min-height:25px; color:#51cf66; }
-        .score { font-size:1rem; margin-bottom:10px; }
+        .message { font-size:1.1rem; margin-top:10px; min-height:20px; color:#51cf66; }
+        .score { font-size:0.9rem; margin-bottom:10px; }
+        input { border-radius:5px; border:1px solid #ccc; }
     </style>
 </head>
 <body>
@@ -21,8 +22,7 @@
         <h1>颜色混合</h1>
         <div class="score">分数: <span id="score">0</span></div>
         <div class="game-area">
-            <p>完成挑战获得分数</p>
-            
+            <p>混合颜色得到目标</p>
         </div>
         <button onclick="location.reload()">重新开始</button>
         <div class="message" id="message"></div>
@@ -31,7 +31,54 @@
         let score = 0;
         const messageDisplay = document.getElementById('message');
         const scoreDisplay = document.getElementById('score');
+        function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
+        const colors = [{r:255,g:0,b:0,name:'红'},{r:0,g:255,b:0,name:'绿'},{r:0,g:0,b:255,name:'蓝'}];
+        let target = {r:Math.floor(Math.random()*256),g:Math.floor(Math.random()*256),b:Math.floor(Math.random()*256)};
+        let current = {r:0,g:0,b:0};
+        
+        const targetDiv = document.createElement('div');
+        targetDiv.style.cssText = 'width:100px;height:100px;margin:10px auto;border-radius:10px;border:2px solid white;';
+        targetDiv.style.background = 'rgb('+target.r+','+target.g+','+target.b+')';
+        
+        const currentDiv = document.createElement('div');
+        currentDiv.style.cssText = 'width:100px;height:100px;margin:10px auto;border-radius:10px;border:2px solid white;';
+        
+        const btns = document.createElement('div');
+        btns.style.cssText = 'display:flex;gap:10px;justify-content:center;margin:15px;';
+        
+        colors.forEach(c => {
+            const btn = document.createElement('button');
+            btn.textContent = '+' + c.name;
+            btn.style.background = 'rgb('+c.r+','+c.g+','+c.b+')';
+            btn.onclick = () => {
+                current.r = Math.min(255, current.r + c.r/3);
+                current.g = Math.min(255, current.g + c.g/3);
+                current.b = Math.min(255, current.b + c.b/3);
+                currentDiv.style.background = 'rgb('+Math.floor(current.r)+','+Math.floor(current.g)+','+Math.floor(current.b)+')';
+            };
+            btns.appendChild(btn);
+        });
+        
+        const checkBtn = document.createElement('button');
+        checkBtn.textContent = '检查';
+        checkBtn.onclick = () => {
+            const diff = Math.abs(current.r-target.r) + Math.abs(current.g-target.g) + Math.abs(current.b-target.b);
+            if(diff < 50) {
+                messageDisplay.textContent = '非常接近!';
+                addScore(10);
+            } else {
+                messageDisplay.textContent = '差异: ' + Math.floor(diff);
+            }
+        };
+        
+        document.querySelector('.game-area').appendChild(document.createElement('p')).textContent = '目标颜色:';
+        document.querySelector('.game-area').appendChild(targetDiv);
+        document.querySelector('.game-area').appendChild(document.createElement('p')).textContent = '当前颜色:';
+        document.querySelector('.game-area').appendChild(currentDiv);
+        document.querySelector('.game-area').appendChild(btns);
+        document.querySelector('.game-area').appendChild(checkBtn);
+    
     </script>
 </body>
 </html>

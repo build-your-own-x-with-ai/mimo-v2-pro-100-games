@@ -9,10 +9,10 @@
         body { font-family:Arial; background:linear-gradient(135deg,#667eea,#764ba2); min-height:100vh; display:flex; justify-content:center; align-items:center; color:white; }
         .container { text-align:center; padding:20px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:600px; width:95%; }
         h1 { font-size:1.8rem; margin-bottom:10px; }
-        .game-area { min-height:150px; background:rgba(255,255,255,0.15); border-radius:10px; padding:15px; margin:15px 0; }
-        button { padding:10px 25px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
+        .game-area { min-height:200px; background:rgba(255,255,255,0.15); border-radius:10px; padding:15px; margin:15px 0; }
+        button { padding:10px 20px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
         button:hover { background:rgba(255,255,255,0.3); }
-        .message { font-size:1.1rem; margin-top:10px; min-height:20px; }
+        .message { font-size:1.1rem; margin-top:10px; min-height:20px; color:#51cf66; }
         .score { font-size:0.9rem; margin-bottom:10px; }
     </style>
 </head>
@@ -22,7 +22,6 @@
         <div class="score">分数: <span id="score">0</span></div>
         <div class="game-area">
             <p>经典纸牌接龙</p>
-            
         </div>
         <button onclick="location.reload()">重新开始</button>
         <div class="message" id="message"></div>
@@ -33,6 +32,44 @@
         const scoreDisplay = document.getElementById('score');
         function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
+        const suits = ['♠','♥','♦','♣'];
+        const values = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+        let deck = [];
+        suits.forEach(s => values.forEach(v => deck.push({suit:s, value:v, color:(s==='♠'||s==='♣')?'black':'red'})));
+        deck.sort(() => Math.random()-0.5);
+        
+        let piles = [[],[],[],[],[],[],[]];
+        for(let i=0;i<7;i++) for(let j=0;j<=i;j++) piles[i].push(deck.pop());
+        
+        const boardDiv = document.createElement('div');
+        boardDiv.style.cssText = 'display:flex;gap:5px;justify-content:center;flex-wrap:wrap;margin:10px;';
+        
+        function render() {
+            boardDiv.innerHTML = '';
+            piles.forEach((pile,i) => {
+                const pileDiv = document.createElement('div');
+                pileDiv.style.cssText = 'width:50px;min-height:70px;background:rgba(255,255,255,0.1);border-radius:5px;';
+                if(pile.length) {
+                    const card = pile[pile.length-1];
+                    const cardDiv = document.createElement('div');
+                    cardDiv.style.cssText = 'width:50px;height:70px;background:white;border-radius:5px;display:flex;align-items:center;justify-content:center;color:'+card.color+';font-size:14px;cursor:pointer;';
+                    cardDiv.textContent = card.value + card.suit;
+                    cardDiv.onclick = () => {
+                        if(i<piles.length-1&&piles[i+1].length===0) {
+                            piles[i+1].push(pile.pop());
+                            addScore(5);
+                            render();
+                        }
+                    };
+                    pileDiv.appendChild(cardDiv);
+                }
+                boardDiv.appendChild(pileDiv);
+            });
+        }
+        
+        render();
+        document.querySelector('.game-area').appendChild(boardDiv);
+    
     </script>
 </body>
 </html>

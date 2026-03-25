@@ -9,10 +9,10 @@
         body { font-family:Arial; background:linear-gradient(135deg,#667eea,#764ba2); min-height:100vh; display:flex; justify-content:center; align-items:center; color:white; }
         .container { text-align:center; padding:20px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:600px; width:95%; }
         h1 { font-size:1.8rem; margin-bottom:10px; }
-        .game-area { min-height:150px; background:rgba(255,255,255,0.15); border-radius:10px; padding:15px; margin:15px 0; }
-        button { padding:10px 25px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
+        .game-area { min-height:200px; background:rgba(255,255,255,0.15); border-radius:10px; padding:15px; margin:15px 0; }
+        button { padding:10px 20px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
         button:hover { background:rgba(255,255,255,0.3); }
-        .message { font-size:1.1rem; margin-top:10px; min-height:20px; }
+        .message { font-size:1.1rem; margin-top:10px; min-height:20px; color:#51cf66; }
         .score { font-size:0.9rem; margin-bottom:10px; }
     </style>
 </head>
@@ -22,7 +22,6 @@
         <div class="score">分数: <span id="score">0</span></div>
         <div class="game-area">
             <p>击球过网</p>
-            
         </div>
         <button onclick="location.reload()">重新开始</button>
         <div class="message" id="message"></div>
@@ -33,6 +32,45 @@
         const scoreDisplay = document.getElementById('score');
         function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
+        const court = document.createElement('div');
+        court.style.cssText = 'width:250px;height:180px;background:#f39c12;border-radius:10px;margin:15px auto;position:relative;';
+        
+        const net = document.createElement('div');
+        net.style.cssText = 'position:absolute;left:123px;top:0;width:4px;height:100%;background:white;';
+        court.appendChild(net);
+        
+        let ballY = 20;
+        let ballDir = 1;
+        let hits = 0;
+        
+        function render() {
+            court.querySelectorAll('.ball').forEach(b => b.remove());
+            const ball = document.createElement('div');
+            ball.className = 'ball';
+            ball.style.cssText = 'position:absolute;left:115px;top:'+ballY+'px;font-size:25px;';
+            ball.textContent = '🏐';
+            court.appendChild(ball);
+        }
+        
+        court.onclick = () => {
+            if(ballY > 50 && ballY < 130) {
+                ballDir = -ballDir;
+                hits++;
+                addScore(5);
+                messageDisplay.textContent = '击球! ' + hits + '次';
+            }
+        };
+        
+        setInterval(() => {
+            ballY += ballDir * 4;
+            if(ballY > 150) { ballDir = -1; hits = 0; }
+            if(ballY < 10) { ballDir = 1; }
+            render();
+        }, 50);
+        
+        render();
+        document.querySelector('.game-area').appendChild(court);
+    
     </script>
 </body>
 </html>

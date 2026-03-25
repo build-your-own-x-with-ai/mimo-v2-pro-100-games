@@ -7,13 +7,14 @@
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:Arial; background:linear-gradient(135deg,#667eea,#764ba2); min-height:100vh; display:flex; justify-content:center; align-items:center; color:white; }
-        .container { text-align:center; padding:30px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:500px; width:90%; }
-        h1 { font-size:2rem; margin-bottom:15px; }
-        .game-area { min-height:200px; background:rgba(255,255,255,0.2); border-radius:10px; padding:20px; margin:20px 0; }
-        button { padding:12px 30px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:25px; color:white; cursor:pointer; margin:5px; }
+        .container { text-align:center; padding:20px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:500px; width:90%; }
+        h1 { font-size:1.8rem; margin-bottom:10px; }
+        .game-area { min-height:200px; background:rgba(255,255,255,0.15); border-radius:10px; padding:15px; margin:15px 0; }
+        button { padding:10px 20px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
         button:hover { background:rgba(255,255,255,0.3); }
-        .message { font-size:1.2rem; margin-top:15px; min-height:25px; color:#51cf66; }
-        .score { font-size:1rem; margin-bottom:10px; }
+        .message { font-size:1.1rem; margin-top:10px; min-height:20px; color:#51cf66; }
+        .score { font-size:0.9rem; margin-bottom:10px; }
+        input { border-radius:5px; border:1px solid #ccc; }
     </style>
 </head>
 <body>
@@ -21,8 +22,7 @@
         <h1>镜像对称</h1>
         <div class="score">分数: <span id="score">0</span></div>
         <div class="game-area">
-            <p>完成挑战获得分数</p>
-            
+            <p>判断是否对称</p>
         </div>
         <button onclick="location.reload()">重新开始</button>
         <div class="message" id="message"></div>
@@ -31,7 +31,49 @@
         let score = 0;
         const messageDisplay = document.getElementById('message');
         const scoreDisplay = document.getElementById('score');
+        function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
+        let grid = [];
+        for(let i=0;i<9;i++) grid.push(Math.random()>0.5 ? 1 : 0);
+        
+        const board = document.createElement('div');
+        board.style.cssText = 'display:grid;grid-template-columns:repeat(3,50px);gap:3px;margin:15px auto;width:fit-content;';
+        
+        function render() {
+            board.innerHTML = '';
+            grid.forEach(g => {
+                const cell = document.createElement('div');
+                cell.style.cssText = 'width:50px;height:50px;background:' + (g?'#e74c3c':'#3498db') + ';border-radius:5px;';
+                board.appendChild(cell);
+            });
+        }
+        
+        render();
+        
+        const btns = document.createElement('div');
+        btns.style.cssText = 'display:flex;gap:10px;justify-content:center;margin:15px;';
+        
+        ['对称','不对称'].forEach((text,i) => {
+            const btn = document.createElement('button');
+            btn.textContent = text;
+            btn.onclick = () => {
+                const isSymmetric = grid[0]===grid[2] && grid[3]===grid[5] && grid[6]===grid[8];
+                if((i===0 && isSymmetric) || (i===1 && !isSymmetric)) {
+                    messageDisplay.textContent = '正确!';
+                    addScore(10);
+                } else {
+                    messageDisplay.textContent = '错误!';
+                }
+                grid = [];
+                for(let j=0;j<9;j++) grid.push(Math.random()>0.5 ? 1 : 0);
+                render();
+            };
+            btns.appendChild(btn);
+        });
+        
+        document.querySelector('.game-area').appendChild(board);
+        document.querySelector('.game-area').appendChild(btns);
+    
     </script>
 </body>
 </html>

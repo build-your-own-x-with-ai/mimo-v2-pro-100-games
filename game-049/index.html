@@ -9,10 +9,10 @@
         body { font-family:Arial; background:linear-gradient(135deg,#667eea,#764ba2); min-height:100vh; display:flex; justify-content:center; align-items:center; color:white; }
         .container { text-align:center; padding:20px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:600px; width:95%; }
         h1 { font-size:1.8rem; margin-bottom:10px; }
-        .game-area { min-height:150px; background:rgba(255,255,255,0.15); border-radius:10px; padding:15px; margin:15px 0; }
-        button { padding:10px 25px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
+        .game-area { min-height:200px; background:rgba(255,255,255,0.15); border-radius:10px; padding:15px; margin:15px 0; }
+        button { padding:10px 20px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
         button:hover { background:rgba(255,255,255,0.3); }
-        .message { font-size:1.1rem; margin-top:10px; min-height:20px; }
+        .message { font-size:1.1rem; margin-top:10px; min-height:20px; color:#51cf66; }
         .score { font-size:0.9rem; margin-bottom:10px; }
     </style>
 </head>
@@ -22,7 +22,6 @@
         <div class="score">分数: <span id="score">0</span></div>
         <div class="game-area">
             <p>选择你的马匹</p>
-            
         </div>
         <button onclick="location.reload()">重新开始</button>
         <div class="message" id="message"></div>
@@ -33,6 +32,52 @@
         const scoreDisplay = document.getElementById('score');
         function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
+        const horses = ['🐴1','🐴2','🐴3','🐴4'];
+        let positions = [0,0,0,0];
+        let running = false;
+        let winner = null;
+        
+        const track = document.createElement('div');
+        track.style.cssText = 'background:#8b4513;padding:10px;border-radius:10px;margin:10px;';
+        
+        function render() {
+            track.innerHTML = '';
+            horses.forEach((h,i) => {
+                const lane = document.createElement('div');
+                lane.style.cssText = 'height:35px;background:#27ae60;margin:5px;border-radius:5px;position:relative;';
+                const horse = document.createElement('span');
+                horse.style.cssText = 'position:absolute;left:'+positions[i]+'px;font-size:22px;';
+                horse.textContent = h;
+                lane.appendChild(horse);
+                track.appendChild(lane);
+            });
+        }
+        
+        const btn = document.createElement('button');
+        btn.textContent = '开始比赛';
+        btn.onclick = () => {
+            if(running) return;
+            running = true;
+            positions = [0,0,0,0];
+            winner = null;
+            const interval = setInterval(() => {
+                positions = positions.map(p => p + Math.random()*8);
+                render();
+                const wi = positions.findIndex(p => p >= 250);
+                if(wi >= 0 && !winner) {
+                    winner = wi;
+                    messageDisplay.textContent = '马'+(wi+1)+'获胜!';
+                    addScore(20);
+                    clearInterval(interval);
+                    running = false;
+                }
+            }, 100);
+        };
+        
+        render();
+        document.querySelector('.game-area').appendChild(track);
+        document.querySelector('.game-area').appendChild(btn);
+    
     </script>
 </body>
 </html>

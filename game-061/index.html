@@ -9,10 +9,10 @@
         body { font-family:Arial; background:linear-gradient(135deg,#667eea,#764ba2); min-height:100vh; display:flex; justify-content:center; align-items:center; color:white; }
         .container { text-align:center; padding:20px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:600px; width:95%; }
         h1 { font-size:1.8rem; margin-bottom:10px; }
-        .game-area { min-height:150px; background:rgba(255,255,255,0.15); border-radius:10px; padding:15px; margin:15px 0; }
-        button { padding:10px 25px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
+        .game-area { min-height:200px; background:rgba(255,255,255,0.15); border-radius:10px; padding:15px; margin:15px 0; }
+        button { padding:10px 20px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
         button:hover { background:rgba(255,255,255,0.3); }
-        .message { font-size:1.1rem; margin-top:10px; min-height:20px; }
+        .message { font-size:1.1rem; margin-top:10px; min-height:20px; color:#51cf66; }
         .score { font-size:0.9rem; margin-bottom:10px; }
     </style>
 </head>
@@ -22,7 +22,6 @@
         <div class="score">分数: <span id="score">0</span></div>
         <div class="game-area">
             <p>击打羽毛球</p>
-            
         </div>
         <button onclick="location.reload()">重新开始</button>
         <div class="message" id="message"></div>
@@ -33,6 +32,44 @@
         const scoreDisplay = document.getElementById('score');
         function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
+        const court = document.createElement('div');
+        court.style.cssText = 'width:250px;height:200px;background:#3498db;border-radius:10px;margin:15px auto;position:relative;';
+        
+        let shuttleY = 50;
+        let shuttleDir = 1;
+        let hits = 0;
+        
+        function render() {
+            court.innerHTML = '';
+            const shuttle = document.createElement('div');
+            shuttle.style.cssText = 'position:absolute;left:115px;top:'+shuttleY+'px;font-size:30px;';
+            shuttle.textContent = '🏸';
+            court.appendChild(shuttle);
+            
+            const net = document.createElement('div');
+            net.style.cssText = 'position:absolute;left:0;top:95px;width:100%;height:5px;background:white;';
+            court.appendChild(net);
+        }
+        
+        court.onclick = () => {
+            if(shuttleY > 60 && shuttleY < 140) {
+                shuttleDir = -shuttleDir;
+                hits++;
+                addScore(5);
+                messageDisplay.textContent = '击中! ' + hits + '次';
+            }
+        };
+        
+        setInterval(() => {
+            shuttleY += shuttleDir * 3;
+            if(shuttleY > 170) shuttleDir = -1;
+            if(shuttleY < 20) shuttleDir = 1;
+            render();
+        }, 50);
+        
+        render();
+        document.querySelector('.game-area').appendChild(court);
+    
     </script>
 </body>
 </html>

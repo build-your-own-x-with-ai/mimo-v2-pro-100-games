@@ -7,13 +7,14 @@
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:Arial; background:linear-gradient(135deg,#667eea,#764ba2); min-height:100vh; display:flex; justify-content:center; align-items:center; color:white; }
-        .container { text-align:center; padding:30px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:500px; width:90%; }
-        h1 { font-size:2rem; margin-bottom:15px; }
-        .game-area { min-height:200px; background:rgba(255,255,255,0.2); border-radius:10px; padding:20px; margin:20px 0; }
-        button { padding:12px 30px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:25px; color:white; cursor:pointer; margin:5px; }
+        .container { text-align:center; padding:20px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:500px; width:90%; }
+        h1 { font-size:1.8rem; margin-bottom:10px; }
+        .game-area { min-height:200px; background:rgba(255,255,255,0.15); border-radius:10px; padding:15px; margin:15px 0; }
+        button { padding:10px 20px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
         button:hover { background:rgba(255,255,255,0.3); }
-        .message { font-size:1.2rem; margin-top:15px; min-height:25px; color:#51cf66; }
-        .score { font-size:1rem; margin-bottom:10px; }
+        .message { font-size:1.1rem; margin-top:10px; min-height:20px; color:#51cf66; }
+        .score { font-size:0.9rem; margin-bottom:10px; }
+        input { border-radius:5px; border:1px solid #ccc; }
     </style>
 </head>
 <body>
@@ -21,8 +22,7 @@
         <h1>角度测量</h1>
         <div class="score">分数: <span id="score">0</span></div>
         <div class="game-area">
-            <p>完成挑战获得分数</p>
-            
+            <p>估算角度</p>
         </div>
         <button onclick="location.reload()">重新开始</button>
         <div class="message" id="message"></div>
@@ -31,7 +31,49 @@
         let score = 0;
         const messageDisplay = document.getElementById('message');
         const scoreDisplay = document.getElementById('score');
+        function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
+        const canvas = document.createElement('canvas');
+        canvas.width = 200;
+        canvas.height = 200;
+        canvas.style.background = '#1a1a2e';
+        
+        const ctx = canvas.getContext('2d');
+        let angle = Math.floor(Math.random()*360);
+        
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(100,100);
+        ctx.lineTo(100,30);
+        ctx.stroke();
+        
+        ctx.strokeStyle = '#e74c3c';
+        ctx.beginPath();
+        ctx.moveTo(100,100);
+        ctx.lineTo(100+70*Math.cos((angle-90)*Math.PI/180), 100+70*Math.sin((angle-90)*Math.PI/180));
+        ctx.stroke();
+        
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.style.cssText = 'font-size:16px;padding:8px;width:80px;';
+        input.placeholder = '度数';
+        
+        const btn = document.createElement('button');
+        btn.textContent = '检查';
+        btn.onclick = () => {
+            if(Math.abs(parseInt(input.value)-angle) <= 10) {
+                messageDisplay.textContent = '接近! 实际: ' + angle + '°';
+                addScore(10);
+            } else {
+                messageDisplay.textContent = '偏差较大! 实际: ' + angle + '°';
+            }
+        };
+        
+        document.querySelector('.game-area').appendChild(canvas);
+        document.querySelector('.game-area').appendChild(input);
+        document.querySelector('.game-area').appendChild(btn);
+    
     </script>
 </body>
 </html>

@@ -9,10 +9,10 @@
         body { font-family:Arial; background:linear-gradient(135deg,#667eea,#764ba2); min-height:100vh; display:flex; justify-content:center; align-items:center; color:white; }
         .container { text-align:center; padding:20px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:600px; width:95%; }
         h1 { font-size:1.8rem; margin-bottom:10px; }
-        .game-area { min-height:150px; background:rgba(255,255,255,0.15); border-radius:10px; padding:15px; margin:15px 0; }
-        button { padding:10px 25px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
+        .game-area { min-height:200px; background:rgba(255,255,255,0.15); border-radius:10px; padding:15px; margin:15px 0; }
+        button { padding:10px 20px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
         button:hover { background:rgba(255,255,255,0.3); }
-        .message { font-size:1.1rem; margin-top:10px; min-height:20px; }
+        .message { font-size:1.1rem; margin-top:10px; min-height:20px; color:#51cf66; }
         .score { font-size:0.9rem; margin-bottom:10px; }
     </style>
 </head>
@@ -22,7 +22,6 @@
         <div class="score">分数: <span id="score">0</span></div>
         <div class="game-area">
             <p>点击钓鱼</p>
-            
         </div>
         <button onclick="location.reload()">重新开始</button>
         <div class="message" id="message"></div>
@@ -33,6 +32,36 @@
         const scoreDisplay = document.getElementById('score');
         function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
+        const pond = document.createElement('div');
+        pond.style.cssText = 'width:280px;height:180px;background:#3498db;border-radius:50%;margin:15px auto;position:relative;overflow:hidden;';
+        
+        let fish = {x:100, y:80};
+        let caught = 0;
+        
+        function renderFish() {
+            pond.innerHTML = '';
+            const f = document.createElement('div');
+            f.style.cssText = 'position:absolute;left:'+fish.x+'px;top:'+fish.y+'px;font-size:30px;cursor:pointer;transition:all 0.3s;';
+            f.textContent = '🐟';
+            f.onclick = () => {
+                caught++;
+                addScore(10);
+                messageDisplay.textContent = '钓到了! 总共: ' + caught;
+                fish = {x:Math.random()*220+20, y:Math.random()*120+20};
+                renderFish();
+            };
+            pond.appendChild(f);
+        }
+        
+        setInterval(() => {
+            fish.x = Math.max(20, Math.min(240, fish.x + (Math.random()-0.5)*30));
+            fish.y = Math.max(20, Math.min(140, fish.y + (Math.random()-0.5)*20));
+            renderFish();
+        }, 500);
+        
+        renderFish();
+        document.querySelector('.game-area').appendChild(pond);
+    
     </script>
 </body>
 </html>

@@ -7,13 +7,14 @@
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:Arial; background:linear-gradient(135deg,#667eea,#764ba2); min-height:100vh; display:flex; justify-content:center; align-items:center; color:white; }
-        .container { text-align:center; padding:30px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:500px; width:90%; }
-        h1 { font-size:2rem; margin-bottom:15px; }
-        .game-area { min-height:200px; background:rgba(255,255,255,0.2); border-radius:10px; padding:20px; margin:20px 0; }
-        button { padding:12px 30px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:25px; color:white; cursor:pointer; margin:5px; }
+        .container { text-align:center; padding:20px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:500px; width:90%; }
+        h1 { font-size:1.8rem; margin-bottom:10px; }
+        .game-area { min-height:200px; background:rgba(255,255,255,0.15); border-radius:10px; padding:15px; margin:15px 0; }
+        button { padding:10px 20px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
         button:hover { background:rgba(255,255,255,0.3); }
-        .message { font-size:1.2rem; margin-top:15px; min-height:25px; color:#51cf66; }
-        .score { font-size:1rem; margin-bottom:10px; }
+        .message { font-size:1.1rem; margin-top:10px; min-height:20px; color:#51cf66; }
+        .score { font-size:0.9rem; margin-bottom:10px; }
+        input { border-radius:5px; border:1px solid #ccc; }
     </style>
 </head>
 <body>
@@ -21,8 +22,7 @@
         <h1>重量平衡</h1>
         <div class="score">分数: <span id="score">0</span></div>
         <div class="game-area">
-            <p>完成挑战获得分数</p>
-            
+            <p>平衡天平</p>
         </div>
         <button onclick="location.reload()">重新开始</button>
         <div class="message" id="message"></div>
@@ -31,7 +31,40 @@
         let score = 0;
         const messageDisplay = document.getElementById('message');
         const scoreDisplay = document.getElementById('score');
+        function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
+        let left = Math.floor(Math.random()*10)+1;
+        let right = Math.floor(Math.random()*10)+1;
+        
+        const display = document.createElement('div');
+        display.style.cssText = 'font-size:24px;margin:20px;';
+        display.textContent = '左边: ' + left + '克 | 右边: ?克';
+        
+        let target = left;
+        
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.style.cssText = 'font-size:16px;padding:8px;width:100px;';
+        
+        const btn = document.createElement('button');
+        btn.textContent = '平衡';
+        btn.onclick = () => {
+            if(parseInt(input.value) === target) {
+                messageDisplay.textContent = '平衡了!';
+                addScore(10);
+                left = Math.floor(Math.random()*10)+1;
+                target = left;
+                display.textContent = '左边: ' + left + '克 | 右边: ?克';
+                input.value = '';
+            } else {
+                messageDisplay.textContent = '不平衡!';
+            }
+        };
+        
+        document.querySelector('.game-area').appendChild(display);
+        document.querySelector('.game-area').appendChild(input);
+        document.querySelector('.game-area').appendChild(btn);
+    
     </script>
 </body>
 </html>

@@ -7,13 +7,14 @@
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:Arial; background:linear-gradient(135deg,#667eea,#764ba2); min-height:100vh; display:flex; justify-content:center; align-items:center; color:white; }
-        .container { text-align:center; padding:30px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:500px; width:90%; }
-        h1 { font-size:2rem; margin-bottom:15px; }
-        .game-area { min-height:200px; background:rgba(255,255,255,0.2); border-radius:10px; padding:20px; margin:20px 0; }
-        button { padding:12px 30px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:25px; color:white; cursor:pointer; margin:5px; }
+        .container { text-align:center; padding:20px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:500px; width:90%; }
+        h1 { font-size:1.8rem; margin-bottom:10px; }
+        .game-area { min-height:200px; background:rgba(255,255,255,0.15); border-radius:10px; padding:15px; margin:15px 0; }
+        button { padding:10px 20px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
         button:hover { background:rgba(255,255,255,0.3); }
-        .message { font-size:1.2rem; margin-top:15px; min-height:25px; color:#51cf66; }
-        .score { font-size:1rem; margin-bottom:10px; }
+        .message { font-size:1.1rem; margin-top:10px; min-height:20px; color:#51cf66; }
+        .score { font-size:0.9rem; margin-bottom:10px; }
+        input { border-radius:5px; border:1px solid #ccc; }
     </style>
 </head>
 <body>
@@ -21,8 +22,7 @@
         <h1>逻辑门电路</h1>
         <div class="score">分数: <span id="score">0</span></div>
         <div class="game-area">
-            <p>完成挑战获得分数</p>
-            
+            <p>连接逻辑门</p>
         </div>
         <button onclick="location.reload()">重新开始</button>
         <div class="message" id="message"></div>
@@ -31,7 +31,44 @@
         let score = 0;
         const messageDisplay = document.getElementById('message');
         const scoreDisplay = document.getElementById('score');
+        function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
+        const area = document.querySelector('.game-area');
+        area.innerHTML = '<p style="margin-bottom:10px;">点击按钮切换输入，观察输出</p>';
+        
+        let inputA = 0, inputB = 0;
+        
+        const display = document.createElement('div');
+        display.style.cssText = 'display:flex;gap:20px;justify-content:center;align-items:center;margin:20px;';
+        
+        const btnA = document.createElement('button');
+        btnA.textContent = 'A: 0';
+        btnA.onclick = () => { inputA = 1-inputA; btnA.textContent = 'A: '+inputA; update(); };
+        
+        const btnB = document.createElement('button');
+        btnB.textContent = 'B: 0';
+        btnB.onclick = () => { inputB = 1-inputB; btnB.textContent = 'B: '+inputB; update(); };
+        
+        const gate = document.createElement('div');
+        gate.style.cssText = 'font-size:24px;padding:10px 20px;background:#3498db;border-radius:5px;';
+        gate.textContent = 'AND';
+        
+        const output = document.createElement('div');
+        output.style.cssText = 'font-size:24px;padding:10px 20px;background:#2ecc71;border-radius:5px;';
+        
+        function update() {
+            const result = inputA & inputB;
+            output.textContent = 'OUT: ' + result;
+            addScore(result ? 5 : 0);
+        }
+        
+        display.appendChild(btnA);
+        display.appendChild(gate);
+        display.appendChild(btnB);
+        display.appendChild(output);
+        area.appendChild(display);
+        update();
+    
     </script>
 </body>
 </html>

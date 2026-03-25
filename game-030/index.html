@@ -7,13 +7,14 @@
     <style>
         * { margin:0; padding:0; box-sizing:border-box; }
         body { font-family:Arial; background:linear-gradient(135deg,#667eea,#764ba2); min-height:100vh; display:flex; justify-content:center; align-items:center; color:white; }
-        .container { text-align:center; padding:30px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:500px; width:90%; }
-        h1 { font-size:2rem; margin-bottom:15px; }
-        .game-area { min-height:200px; background:rgba(255,255,255,0.2); border-radius:10px; padding:20px; margin:20px 0; }
-        button { padding:12px 30px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:25px; color:white; cursor:pointer; margin:5px; }
+        .container { text-align:center; padding:20px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:500px; width:90%; }
+        h1 { font-size:1.8rem; margin-bottom:10px; }
+        .game-area { min-height:200px; background:rgba(255,255,255,0.15); border-radius:10px; padding:15px; margin:15px 0; }
+        button { padding:10px 20px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
         button:hover { background:rgba(255,255,255,0.3); }
-        .message { font-size:1.2rem; margin-top:15px; min-height:25px; color:#51cf66; }
-        .score { font-size:1rem; margin-bottom:10px; }
+        .message { font-size:1.1rem; margin-top:10px; min-height:20px; color:#51cf66; }
+        .score { font-size:0.9rem; margin-bottom:10px; }
+        input { border-radius:5px; border:1px solid #ccc; }
     </style>
 </head>
 <body>
@@ -21,8 +22,7 @@
         <h1>面积计算</h1>
         <div class="score">分数: <span id="score">0</span></div>
         <div class="game-area">
-            <p>完成挑战获得分数</p>
-            
+            <p>计算图形面积</p>
         </div>
         <button onclick="location.reload()">重新开始</button>
         <div class="message" id="message"></div>
@@ -31,7 +31,47 @@
         let score = 0;
         const messageDisplay = document.getElementById('message');
         const scoreDisplay = document.getElementById('score');
+        function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
+        let w = Math.floor(Math.random()*10)+1;
+        let h = Math.floor(Math.random()*10)+1;
+        let type = Math.random()>0.5 ? 'rect' : 'tri';
+        
+        const display = document.createElement('div');
+        display.style.cssText = 'font-size:20px;margin:15px;';
+        
+        if(type==='rect') {
+            display.textContent = '矩形: 宽=' + w + ', 高=' + h;
+        } else {
+            display.textContent = '三角形: 底=' + w + ', 高=' + h;
+        }
+        
+        const input = document.createElement('input');
+        input.type = 'number';
+        input.style.cssText = 'font-size:16px;padding:8px;width:100px;';
+        input.placeholder = '面积';
+        
+        const btn = document.createElement('button');
+        btn.textContent = '检查';
+        btn.onclick = () => {
+            const answer = type==='rect' ? w*h : w*h/2;
+            if(parseInt(input.value) === answer) {
+                messageDisplay.textContent = '正确!';
+                addScore(10);
+                w = Math.floor(Math.random()*10)+1;
+                h = Math.floor(Math.random()*10)+1;
+                type = Math.random()>0.5 ? 'rect' : 'tri';
+                display.textContent = type==='rect' ? '矩形: 宽='+w+', 高='+h : '三角形: 底='+w+', 高='+h;
+                input.value = '';
+            } else {
+                messageDisplay.textContent = '错误! 答案是' + answer;
+            }
+        };
+        
+        document.querySelector('.game-area').appendChild(display);
+        document.querySelector('.game-area').appendChild(input);
+        document.querySelector('.game-area').appendChild(btn);
+    
     </script>
 </body>
 </html>

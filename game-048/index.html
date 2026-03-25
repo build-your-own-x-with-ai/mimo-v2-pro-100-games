@@ -9,10 +9,10 @@
         body { font-family:Arial; background:linear-gradient(135deg,#667eea,#764ba2); min-height:100vh; display:flex; justify-content:center; align-items:center; color:white; }
         .container { text-align:center; padding:20px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:600px; width:95%; }
         h1 { font-size:1.8rem; margin-bottom:10px; }
-        .game-area { min-height:150px; background:rgba(255,255,255,0.15); border-radius:10px; padding:15px; margin:15px 0; }
-        button { padding:10px 25px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
+        .game-area { min-height:200px; background:rgba(255,255,255,0.15); border-radius:10px; padding:15px; margin:15px 0; }
+        button { padding:10px 20px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
         button:hover { background:rgba(255,255,255,0.3); }
-        .message { font-size:1.1rem; margin-top:10px; min-height:20px; }
+        .message { font-size:1.1rem; margin-top:10px; min-height:20px; color:#51cf66; }
         .score { font-size:0.9rem; margin-bottom:10px; }
     </style>
 </head>
@@ -21,8 +21,7 @@
         <h1>彩票刮刮乐</h1>
         <div class="score">分数: <span id="score">0</span></div>
         <div class="game-area">
-            <p>刮开涂层查看中奖</p>
-            
+            <p>刮开查看中奖</p>
         </div>
         <button onclick="location.reload()">重新开始</button>
         <div class="message" id="message"></div>
@@ -33,6 +32,41 @@
         const scoreDisplay = document.getElementById('score');
         function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
+        let scratched = false;
+        let prize = Math.random()>0.6 ? (Math.random()>0.5 ? 50 : 20) : 0;
+        
+        const ticket = document.createElement('div');
+        ticket.style.cssText = 'width:200px;height:100px;background:linear-gradient(135deg,#f39c12,#e74c3c);border-radius:10px;margin:15px auto;display:flex;align-items:center;justify-content:center;font-size:24px;color:white;cursor:pointer;';
+        ticket.textContent = '点击刮开';
+        
+        ticket.onclick = () => {
+            if(scratched) return;
+            scratched = true;
+            if(prize > 0) {
+                ticket.textContent = '¥' + prize;
+                ticket.style.background = 'linear-gradient(135deg,#2ecc71,#27ae60)';
+                messageDisplay.textContent = '恭喜中奖!';
+                addScore(prize);
+            } else {
+                ticket.textContent = '谢谢参与';
+                ticket.style.background = '#95a5a6';
+                messageDisplay.textContent = '没中奖，再试一次!';
+            }
+        };
+        
+        const newBtn = document.createElement('button');
+        newBtn.textContent = '再来一张';
+        newBtn.onclick = () => {
+            scratched = false;
+            prize = Math.random()>0.6 ? (Math.random()>0.5 ? 50 : 20) : 0;
+            ticket.textContent = '点击刮开';
+            ticket.style.background = 'linear-gradient(135deg,#f39c12,#e74c3c)';
+            messageDisplay.textContent = '';
+        };
+        
+        document.querySelector('.game-area').appendChild(ticket);
+        document.querySelector('.game-area').appendChild(newBtn);
+    
     </script>
 </body>
 </html>

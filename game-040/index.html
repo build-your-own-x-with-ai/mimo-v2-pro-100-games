@@ -9,10 +9,10 @@
         body { font-family:Arial; background:linear-gradient(135deg,#667eea,#764ba2); min-height:100vh; display:flex; justify-content:center; align-items:center; color:white; }
         .container { text-align:center; padding:20px; background:rgba(255,255,255,0.1); border-radius:20px; backdrop-filter:blur(10px); max-width:600px; width:95%; }
         h1 { font-size:1.8rem; margin-bottom:10px; }
-        .game-area { min-height:150px; background:rgba(255,255,255,0.15); border-radius:10px; padding:15px; margin:15px 0; }
-        button { padding:10px 25px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
+        .game-area { min-height:200px; background:rgba(255,255,255,0.15); border-radius:10px; padding:15px; margin:15px 0; }
+        button { padding:10px 20px; font-size:1rem; background:rgba(255,255,255,0.2); border:2px solid rgba(255,255,255,0.5); border-radius:20px; color:white; cursor:pointer; margin:5px; }
         button:hover { background:rgba(255,255,255,0.3); }
-        .message { font-size:1.1rem; margin-top:10px; min-height:20px; }
+        .message { font-size:1.1rem; margin-top:10px; min-height:20px; color:#51cf66; }
         .score { font-size:0.9rem; margin-bottom:10px; }
     </style>
 </head>
@@ -22,7 +22,6 @@
         <div class="score">分数: <span id="score">0</span></div>
         <div class="game-area">
             <p>跳过对方棋子</p>
-            
         </div>
         <button onclick="location.reload()">重新开始</button>
         <div class="message" id="message"></div>
@@ -33,6 +32,59 @@
         const scoreDisplay = document.getElementById('score');
         function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
+        const size=8;
+        let board = Array(size).fill().map((_,r) => Array(size).fill().map((_,c) => (r+c)%2 ? (r<3?2:r>4?1:0) : 0));
+        let selected = null;
+        
+        const boardDiv = document.createElement('div');
+        boardDiv.style.cssText = 'display:grid;grid-template-columns:repeat('+size+',35px);gap:1px;background:#8e44ad;padding:3px;margin:10px auto;width:fit-content;';
+        
+        function render() {
+            boardDiv.innerHTML = '';
+            for(let r=0;r<size;r++) for(let c=0;c<size;c++) {
+                const cell = document.createElement('div');
+                cell.style.cssText = 'width:35px;height:35px;background:'+(r+c)%2?'#2c3e50':'#ecf0f1'+';display:flex;align-items:center;justify-content:center;cursor:pointer;';
+                if(board[r][c]) {
+                    const piece = document.createElement('div');
+                    piece.style.cssText = 'width:28px;height:28px;border-radius:50%;background:'+(board[r][c]===1?'#e74c3c':'#3498db')+';';
+                    if(selected&&selected.r===r&&selected.c===c) piece.style.border='3px solid #f1c40f';
+                    cell.appendChild(piece);
+                }
+                cell.onclick = () => select(r,c);
+                boardDiv.appendChild(cell);
+            }
+        }
+        
+        function select(r,c) {
+            if(selected) {
+                if(!board[r][c]&&Math.abs(r-selected.r)===1&&Math.abs(c-selected.c)===1) {
+                    board[r][c] = board[selected.r][selected.c];
+                    board[selected.r][selected.c] = 0;
+                    selected = null;
+                    addScore(5);
+                } else if(!board[r][c]&&Math.abs(r-selected.r)===2&&Math.abs(c-selected.c)===2) {
+                    const mr=(r+selected.r)/2, mc=(c+selected.c)/2;
+                    if(board[mr][mc]&&board[mr][mc]!==board[selected.r][selected.c]) {
+                        board[mr][mc] = 0;
+                        board[r][c] = board[selected.r][selected.c];
+                        board[selected.r][selected.c] = 0;
+                        selected = null;
+                        addScore(20);
+                    }
+                } else if(board[r][c]) {
+                    selected = {r,c};
+                } else {
+                    selected = null;
+                }
+            } else if(board[r][c]) {
+                selected = {r,c};
+            }
+            render();
+        }
+        
+        render();
+        document.querySelector('.game-area').appendChild(boardDiv);
+    
     </script>
 </body>
 </html>
