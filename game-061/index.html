@@ -33,41 +33,88 @@
         function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
         const court = document.createElement('div');
-        court.style.cssText = 'width:250px;height:200px;background:#3498db;border-radius:10px;margin:15px auto;position:relative;';
+        court.style.cssText = 'width:400px;height:300px;background:#3498db;border-radius:10px;margin:15px auto;position:relative;overflow:hidden;';
         
-        let shuttleY = 50;
-        let shuttleDir = 1;
+        const net = document.createElement('div');
+        net.style.cssText = 'position:absolute;left:195px;top:0;width:10px;height:300px;background:white;';
+        court.appendChild(net);
+        
+        const shuttle = document.createElement('div');
+        shuttle.style.cssText = 'position:absolute;width:20px;height:20px;background:#f1c40f;border-radius:50%;left:200px;top:150px;';
+        court.appendChild(shuttle);
+        
+        const playerRacket = document.createElement('div');
+        playerRacket.style.cssText = 'position:absolute;left:10px;top:140px;width:15px;height:80px;background:#e74c3c;border-radius:5px;';
+        court.appendChild(playerRacket);
+        
+        const aiRacket = document.createElement('div');
+        aiRacket.style.cssText = 'position:absolute;right:10px;top:140px;width:15px;height:80px;background:#3498db;border-radius:5px;';
+        court.appendChild(aiRacket);
+        
+        let shuttleX = 200, shuttleY = 150, shuttleVX = 2, shuttleVY = 2;
+        let playerY = 140, aiY = 140;
+        const racketWidth = 15, racketHeight = 80;
+        const courtWidth = 400, courtHeight = 300;
         let hits = 0;
         
-        function render() {
-            court.innerHTML = '';
-            const shuttle = document.createElement('div');
-            shuttle.style.cssText = 'position:absolute;left:115px;top:'+shuttleY+'px;font-size:30px;';
-            shuttle.textContent = '🏸';
-            court.appendChild(shuttle);
-            
-            const net = document.createElement('div');
-            net.style.cssText = 'position:absolute;left:0;top:95px;width:100%;height:5px;background:white;';
-            court.appendChild(net);
+        function resetShuttle() {
+            shuttleX = 200; shuttleY = 150; shuttleVX = 2; shuttleVY = 2;
         }
         
-        court.onclick = () => {
-            if(shuttleY > 60 && shuttleY < 140) {
-                shuttleDir = -shuttleDir;
+        function update() {
+            shuttleX += shuttleVX;
+            shuttleY += shuttleVY;
+            
+            shuttleVY += 0.1;
+            
+            if(shuttleY < 0 || shuttleY > courtHeight - 20) {
+                shuttleVY = -shuttleVY * 0.8;
+                shuttleY = Math.max(0, Math.min(courtHeight - 20, shuttleY));
+            }
+            
+            if(shuttleX < racketWidth + 10 && shuttleY + 20 > playerY && shuttleY < playerY + racketHeight) {
+                shuttleVX = Math.abs(shuttleVX);
+                shuttleVY = -Math.abs(shuttleVY) - 1;
                 hits++;
-                addScore(5);
+                addScore(10);
                 messageDisplay.textContent = '击中! ' + hits + '次';
             }
-        };
+            
+            if(shuttleX > courtWidth - racketWidth - 10 - 20 && shuttleY + 20 > aiY && shuttleY < aiY + racketHeight) {
+                shuttleVX = -Math.abs(shuttleVX);
+                shuttleVY = -Math.abs(shuttleVY) - 1;
+            }
+            
+            if(shuttleX < 0) {
+                messageDisplay.textContent = 'AI得分!';
+                setTimeout(resetShuttle, 1000);
+                shuttleVX = 0; shuttleVY = 0;
+            }
+            
+            if(shuttleX > courtWidth) {
+                messageDisplay.textContent = '玩家得分!';
+                addScore(50);
+                setTimeout(resetShuttle, 1000);
+                shuttleVX = 0; shuttleVY = 0;
+            }
+            
+            const aiTarget = shuttleY - racketHeight/2;
+            aiY += (aiTarget - aiY) * 0.08;
+            aiY = Math.max(0, Math.min(courtHeight - racketHeight, aiY));
+            
+            shuttle.style.left = shuttleX + 'px';
+            shuttle.style.top = shuttleY + 'px';
+            playerRacket.style.top = playerY + 'px';
+            aiRacket.style.top = aiY + 'px';
+        }
         
-        setInterval(() => {
-            shuttleY += shuttleDir * 3;
-            if(shuttleY > 170) shuttleDir = -1;
-            if(shuttleY < 20) shuttleDir = 1;
-            render();
-        }, 50);
+        setInterval(update, 20);
         
-        render();
+        document.addEventListener('mousemove', e => {
+            const rect = court.getBoundingClientRect();
+            playerY = Math.max(0, Math.min(courtHeight - racketHeight, e.clientY - rect.top - racketHeight/2));
+        });
+        
         document.querySelector('.game-area').appendChild(court);
     
     </script>

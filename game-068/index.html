@@ -33,42 +33,95 @@
         function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
         const court = document.createElement('div');
-        court.style.cssText = 'width:250px;height:180px;background:#f39c12;border-radius:10px;margin:15px auto;position:relative;';
+        court.style.cssText = 'width:400px;height:300px;background:#f39c12;border-radius:10px;margin:15px auto;position:relative;overflow:hidden;';
         
         const net = document.createElement('div');
-        net.style.cssText = 'position:absolute;left:123px;top:0;width:4px;height:100%;background:white;';
+        net.style.cssText = 'position:absolute;left:195px;top:0;width:10px;height:300px;background:white;';
         court.appendChild(net);
         
-        let ballY = 20;
-        let ballDir = 1;
+        const ball = document.createElement('div');
+        ball.style.cssText = 'position:absolute;width:20px;height:20px;background:white;border-radius:50%;left:200px;top:150px;';
+        court.appendChild(ball);
+        
+        const player = document.createElement('div');
+        player.style.cssText = 'position:absolute;left:50px;top:200px;width:30px;height:40px;background:#e74c3c;border-radius:5px;';
+        court.appendChild(player);
+        
+        const ai = document.createElement('div');
+        ai.style.cssText = 'position:absolute;right:50px;top:200px;width:30px;height:40px;background:#3498db;border-radius:5px;';
+        court.appendChild(ai);
+        
+        let ballX = 200, ballY = 150, ballVX = 2, ballVY = 2;
+        let playerX = 50, playerY = 200, aiX = 320, aiY = 200;
+        const playerWidth = 30, playerHeight = 40;
+        const courtWidth = 400, courtHeight = 300;
         let hits = 0;
         
-        function render() {
-            court.querySelectorAll('.ball').forEach(b => b.remove());
-            const ball = document.createElement('div');
-            ball.className = 'ball';
-            ball.style.cssText = 'position:absolute;left:115px;top:'+ballY+'px;font-size:25px;';
-            ball.textContent = '🏐';
-            court.appendChild(ball);
+        function resetBall() {
+            ballX = 200; ballY = 150; ballVX = 2; ballVY = 2;
         }
         
-        court.onclick = () => {
-            if(ballY > 50 && ballY < 130) {
-                ballDir = -ballDir;
-                hits++;
-                addScore(5);
-                messageDisplay.textContent = '击球! ' + hits + '次';
+        function update() {
+            ballX += ballVX;
+            ballY += ballVY;
+            
+            ballVY += 0.1;
+            
+            if(ballY < 0 || ballY > courtHeight - 20) {
+                ballVY = -ballVY * 0.8;
+                ballY = Math.max(0, Math.min(courtHeight - 20, ballY));
             }
-        };
+            
+            if(ballX < playerX + playerWidth && ballY + 20 > playerY && ballY < playerY + playerHeight) {
+                ballVX = Math.abs(ballVX);
+                ballVY = -Math.abs(ballVY) - 2;
+                hits++;
+                addScore(10);
+                messageDisplay.textContent = '扣球! ' + hits + '次';
+            }
+            
+            if(ballX > aiX - 20 && ballY + 20 > aiY && ballY < aiY + playerHeight) {
+                ballVX = -Math.abs(ballVX);
+                ballVY = -Math.abs(ballVY) - 1;
+            }
+            
+            if(ballX < 0) {
+                messageDisplay.textContent = 'AI得分!';
+                setTimeout(resetBall, 1000);
+                ballVX = 0; ballVY = 0;
+            }
+            
+            if(ballX > courtWidth) {
+                messageDisplay.textContent = '玩家得分!';
+                addScore(50);
+                setTimeout(resetBall, 1000);
+                ballVX = 0; ballVY = 0;
+            }
+            
+            const aiTargetX = ballX > courtWidth/2 ? ballX - 30 : 320;
+            const aiTargetY = ballY - playerHeight/2;
+            aiX += (aiTargetX - aiX) * 0.1;
+            aiY += (aiTargetY - aiY) * 0.1;
+            aiX = Math.max(courtWidth/2 + 20, Math.min(courtWidth - playerWidth, aiX));
+            aiY = Math.max(0, Math.min(courtHeight - playerHeight, aiY));
+            
+            ball.style.left = ballX + 'px';
+            ball.style.top = ballY + 'px';
+            player.style.left = playerX + 'px';
+            player.style.top = playerY + 'px';
+            ai.style.left = aiX + 'px';
+            ai.style.top = aiY + 'px';
+        }
         
-        setInterval(() => {
-            ballY += ballDir * 4;
-            if(ballY > 150) { ballDir = -1; hits = 0; }
-            if(ballY < 10) { ballDir = 1; }
-            render();
-        }, 50);
+        setInterval(update, 20);
         
-        render();
+        document.addEventListener('keydown', e => {
+            if(e.key === 'ArrowLeft') playerX = Math.max(0, playerX - 5);
+            if(e.key === 'ArrowRight') playerX = Math.min(courtWidth/2 - playerWidth, playerX + 5);
+            if(e.key === 'ArrowUp') playerY = Math.max(0, playerY - 5);
+            if(e.key === 'ArrowDown') playerY = Math.min(courtHeight - playerHeight, playerY + 5);
+        });
+        
         document.querySelector('.game-area').appendChild(court);
     
     </script>

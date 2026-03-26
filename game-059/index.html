@@ -33,43 +33,82 @@
         function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
         const court = document.createElement('div');
-        court.style.cssText = 'width:280px;height:180px;background:#27ae60;border:3px solid white;margin:15px auto;position:relative;';
+        court.style.cssText = 'width:400px;height:250px;background:#27ae60;border:3px solid white;margin:15px auto;position:relative;overflow:hidden;';
         
-        let ballY = 10;
-        let ballDir = 1;
-        let paddleY = 80;
+        const net = document.createElement('div');
+        net.style.cssText = 'position:absolute;left:195px;top:0;width:10px;height:250px;background:white;';
+        court.appendChild(net);
         
-        function render() {
-            court.innerHTML = '';
-            const ball = document.createElement('div');
-            ball.style.cssText = 'position:absolute;left:130px;top:'+ballY+'px;font-size:25px;';
-            ball.textContent = '🎾';
-            court.appendChild(ball);
-            
-            const paddle = document.createElement('div');
-            paddle.style.cssText = 'position:absolute;right:10px;top:'+paddleY+'px;width:10px;height:50px;background:white;border-radius:5px;';
-            court.appendChild(paddle);
+        const ball = document.createElement('div');
+        ball.style.cssText = 'position:absolute;width:15px;height:15px;background:#f1c40f;border-radius:50%;left:200px;top:120px;';
+        court.appendChild(ball);
+        
+        const playerPaddle = document.createElement('div');
+        playerPaddle.style.cssText = 'position:absolute;left:10px;top:110px;width:10px;height:60px;background:#e74c3c;border-radius:5px;';
+        court.appendChild(playerPaddle);
+        
+        const aiPaddle = document.createElement('div');
+        aiPaddle.style.cssText = 'position:absolute;right:10px;top:110px;width:10px;height:60px;background:#3498db;border-radius:5px;';
+        court.appendChild(aiPaddle);
+        
+        let ballX = 200, ballY = 120, ballVX = 3, ballVY = 2;
+        let playerY = 110, aiY = 110;
+        const paddleWidth = 10, paddleHeight = 60;
+        const courtWidth = 400, courtHeight = 250;
+        
+        function resetBall() {
+            ballX = 200; ballY = 120; ballVX = 3; ballVY = 2;
         }
         
-        setInterval(() => {
-            ballY += ballDir * 5;
-            if(ballY > 150) { ballDir = -1; }
-            if(ballY < 10) { ballDir = 1; }
+        function update() {
+            ballX += ballVX;
+            ballY += ballVY;
             
-            if(ballY >= paddleY && ballY <= paddleY + 50 && ballDir === 1) {
-                ballDir = -1;
-                addScore(5);
-                messageDisplay.textContent = '回击成功!';
+            if(ballY < 0 || ballY > courtHeight - 15) {
+                ballVY = -ballVY;
+                ballY = Math.max(0, Math.min(courtHeight - 15, ballY));
             }
-            render();
-        }, 50);
+            
+            if(ballX < paddleWidth + 10 && ballY + 15 > playerY && ballY < playerY + paddleHeight) {
+                ballVX = Math.abs(ballVX);
+                addScore(10);
+                messageDisplay.textContent = '玩家回击!';
+            }
+            
+            if(ballX > courtWidth - paddleWidth - 10 - 15 && ballY + 15 > aiY && ballY < aiY + paddleHeight) {
+                ballVX = -Math.abs(ballVX);
+            }
+            
+            if(ballX < 0) {
+                messageDisplay.textContent = 'AI得分!';
+                setTimeout(resetBall, 1000);
+                ballVX = 0; ballVY = 0;
+            }
+            
+            if(ballX > courtWidth) {
+                messageDisplay.textContent = '玩家得分!';
+                addScore(50);
+                setTimeout(resetBall, 1000);
+                ballVX = 0; ballVY = 0;
+            }
+            
+            const aiTarget = ballY - paddleHeight/2;
+            aiY += (aiTarget - aiY) * 0.1;
+            aiY = Math.max(0, Math.min(courtHeight - paddleHeight, aiY));
+            
+            ball.style.left = ballX + 'px';
+            ball.style.top = ballY + 'px';
+            playerPaddle.style.top = playerY + 'px';
+            aiPaddle.style.top = aiY + 'px';
+        }
+        
+        setInterval(update, 20);
         
         document.addEventListener('mousemove', e => {
             const rect = court.getBoundingClientRect();
-            paddleY = Math.max(0, Math.min(130, e.clientY - rect.top - 25));
+            playerY = Math.max(0, Math.min(courtHeight - paddleHeight, e.clientY - rect.top - paddleHeight/2));
         });
         
-        render();
         document.querySelector('.game-area').appendChild(court);
     
     </script>

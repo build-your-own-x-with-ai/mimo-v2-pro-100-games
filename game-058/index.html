@@ -33,40 +33,101 @@
         function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
         const course = document.createElement('div');
-        course.style.cssText = 'width:280px;height:100px;background:#27ae60;border-radius:10px;margin:15px auto;position:relative;';
+        course.style.cssText = 'width:500px;height:200px;background:#27ae60;border-radius:10px;margin:15px auto;position:relative;overflow:hidden;';
         
-        let ballX = 30, holeX = 230;
+        const hole = document.createElement('div');
+        hole.style.cssText = 'position:absolute;right:30px;top:85px;width:30px;height:30px;background:#2c3e50;border-radius:50%;';
+        course.appendChild(hole);
+        
+        const ball = document.createElement('div');
+        ball.style.cssText = 'position:absolute;left:50px;top:90px;width:20px;height:20px;background:white;border-radius:50%;';
+        course.appendChild(ball);
+        
+        let ballX = 50, ballY = 90, ballVX = 0, ballVY = 0;
+        let isDragging = false;
+        let dragStartX, dragStartY;
         let strokes = 0;
+        const friction = 0.98;
+        const holeX = 440, holeY = 90;
         
-        function render() {
-            course.innerHTML = '';
-            const ball = document.createElement('div');
-            ball.style.cssText = 'position:absolute;left:'+ballX+'px;top:42px;font-size:20px;';
-            ball.textContent = '⚪';
-            course.appendChild(ball);
-            
-            const hole = document.createElement('div');
-            hole.style.cssText = 'position:absolute;left:'+holeX+'px;top:40px;width:25px;height:25px;background:#2c3e50;border-radius:50%;';
-            course.appendChild(hole);
+        function resetBall() {
+            ballX = 50; ballY = 90; ballVX = 0; ballVY = 0;
         }
         
-        course.onclick = () => {
-            strokes++;
-            const dist = Math.abs(ballX - holeX);
-            if(dist < 20) {
-                ballX = holeX;
-                messageDisplay.textContent = '进洞! ' + strokes + '杆';
-                addScore(Math.max(10, 50 - strokes*5));
-                strokes = 0;
-                ballX = 30;
-            } else {
-                ballX += Math.min(dist, Math.floor(Math.random()*40+20));
-                ballX = Math.min(ballX, 250);
+        function update() {
+            if(!isDragging && (ballVX !== 0 || ballVY !== 0)) {
+                ballX += ballVX;
+                ballY += ballVY;
+                ballVX *= friction;
+                ballVY *= friction;
+                
+                if(Math.abs(ballVX) < 0.1 && Math.abs(ballVY) < 0.1) {
+                    ballVX = 0; ballVY = 0;
+                }
+                
+                if(ballX < 0 || ballX > 480) {
+                    ballVX = -ballVX * 0.8;
+                    ballX = Math.max(0, Math.min(480, ballX));
+                }
+                if(ballY < 0 || ballY > 180) {
+                    ballVY = -ballVY * 0.8;
+                    ballY = Math.max(0, Math.min(180, ballY));
+                }
+                
+                if(Math.abs(ballX - holeX) < 15 && Math.abs(ballY - holeY) < 15) {
+                    strokes++;
+                    addScore(Math.max(10, 100 - strokes * 5));
+                    messageDisplay.textContent = '进洞! ' + strokes + '杆';
+                    strokes = 0;
+                    setTimeout(resetBall, 1000);
+                    ballVX = 0; ballVY = 0;
+                }
             }
-            render();
-        };
+            
+            ball.style.left = ballX + 'px';
+            ball.style.top = ballY + 'px';
+        }
         
-        render();
+        course.addEventListener('mousedown', e => {
+            if(ballVX === 0 && ballVY === 0) {
+                isDragging = true;
+                const rect = course.getBoundingClientRect();
+                dragStartX = e.clientX - rect.left;
+                dragStartY = e.clientY - rect.top;
+            }
+        });
+        
+        course.addEventListener('mousemove', e => {
+            if(isDragging) {
+                const rect = course.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                const dx = dragStartX - mouseX;
+                const dy = dragStartY - mouseY;
+                ballX = dragStartX + dx * 0.1;
+                ballY = dragStartY + dy * 0.1;
+            }
+        });
+        
+        course.addEventListener('mouseup', e => {
+            if(isDragging) {
+                isDragging = false;
+                strokes++;
+                const rect = course.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                ballVX = (dragStartX - mouseX) * 0.1;
+                ballVY = (dragStartY - mouseY) * 0.1;
+            }
+        });
+        
+        course.addEventListener('mouseleave', () => {
+            if(isDragging) {
+                isDragging = false;
+            }
+        });
+        
+        setInterval(update, 20);
         document.querySelector('.game-area').appendChild(course);
     
     </script>

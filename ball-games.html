@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>球类游戏展示 - 100个JavaScript小游戏</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { text-align: center; color: white; margin-bottom: 40px; }
+        h1 { font-size: 2.5rem; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); }
+        .subtitle { font-size: 1.2rem; opacity: 0.9; }
+        .back-link { color: white; text-decoration: none; font-size: 1rem; margin-bottom: 20px; display: inline-block; }
+        .back-link:hover { text-decoration: underline; }
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        .game-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+        .game-header { display: flex; align-items: center; margin-bottom: 15px; }
+        .game-icon { font-size: 3rem; margin-right: 15px; }
+        .game-info { flex: 1; }
+        .game-number { font-size: 0.9rem; color: #667eea; font-weight: bold; margin-bottom: 5px; }
+        .game-title { font-size: 1.5rem; font-weight: bold; color: #333; margin-bottom: 5px; }
+        .game-category { font-size: 0.9rem; color: #764ba2; }
+        .game-desc { font-size: 1rem; color: #666; line-height: 1.5; margin-bottom: 15px; }
+        .game-features {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .feature-title { font-weight: bold; color: #333; margin-bottom: 10px; }
+        .feature-list { list-style: none; padding-left: 0; }
+        .feature-list li { padding: 5px 0; color: #555; position: relative; padding-left: 20px; }
+        .feature-list li:before { content: "✓"; position: absolute; left: 0; color: #27ae60; font-weight: bold; }
+        .play-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-block;
+            text-decoration: none;
+            text-align: center;
+            width: 100%;
+        }
+        .play-btn:hover { background: linear-gradient(135deg, #764ba2, #667eea); transform: scale(1.02); }
+        .improved-badge {
+            background: #2ecc71;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 10px;
+        }
+        @media (max-width: 768px) {
+            h1 { font-size: 2rem; }
+            .games-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>球类游戏展示</h1>
+            <p class="subtitle">17个已改进的球类游戏，拥有真实物理效果和完整游戏机制</p>
+            <a href="index.html" class="back-link">← 返回游戏列表</a>
+        </header>
+        
+        <div class="games-grid" id="gamesGrid">
+            <!-- 游戏卡片将通过JavaScript动态生成 -->
+        </div>
+    </div>
+
+    <script>
+        const ballGames = [
+            {
+                id: 54,
+                title: "投篮游戏",
+                icon: "🏀",
+                desc: "真实的抛物线投篮物理引擎，拖拽控制投篮方向和力度",
+                features: ["拖拽控制投篮轨迹", "真实的抛物线物理效果", "篮板反弹效果", "计分系统"]
+            },
+            {
+                id: 55,
+                title: "射箭游戏",
+                icon: "🏹",
+                desc: "精确的弓箭物理模拟，拖拽瞄准和释放弓箭",
+                features: ["拖拽瞄准系统", "弓箭抛物线飞行", "靶心距离计算", "分数等级系统"]
+            },
+            {
+                id: 56,
+                title: "飞镖游戏",
+                icon: "🎯",
+                desc: "真实的飞镖投掷体验，拖拽控制投掷方向",
+                features: ["拖拽投掷机制", "飞镖飞行轨迹", "飞镖盘得分区域", "精确命中判定"]
+            },
+            {
+                id: 57,
+                title: "保龄球",
+                icon: "🎳",
+                desc: "物理模拟的保龄球体验，点击投球击倒球瓶",
+                features: ["球瓶物理碰撞", "多球瓶排列", "计分系统", "全中奖励"]
+            },
+            {
+                id: 58,
+                title: "高尔夫",
+                icon: "⛳",
+                desc: "挥杆击球机制，控制力度和方向让球进洞",
+                features: ["拖拽挥杆控制", "草地摩擦力效果", "进球判定", "杆数统计"]
+            },
+            {
+                id: 59,
+                title: "网球",
+                icon: "🎾",
+                desc: "双人对战网球，AI对手会自动回击",
+                features: ["玩家控制球拍", "AI对手回球", "球网分隔场地", "得分系统"]
+            },
+            {
+                id: 60,
+                title: "乒乓球",
+                icon: "🏓",
+                desc: "真实的乒乓球物理效果，速度逐渐增加",
+                features: ["鼠标/键盘控制球拍", "球速逐渐增加", "反弹角度计算", "回合计数"]
+            },
+            {
+                id: 61,
+                title: "羽毛球",
+                icon: "🏸",
+                desc: "羽毛球物理模拟，高抛物线轨迹和重力效果",
+                features: ["高抛物线轨迹", "重力效果", "AI对手", "扣球机制"]
+            },
+            {
+                id: 62,
+                title: "足球",
+                icon: "⚽",
+                desc: "射门机制，拖拽控制射门方向，守门员会扑救",
+                features: ["拖拽射门控制", "守门员AI", "抛物线射门", "进球判定"]
+            },
+            {
+                id: 63,
+                title: "篮球",
+                icon: "🏀",
+                desc: "投篮游戏，拖拽控制投篮，有篮板反弹效果",
+                features: ["拖拽投篮机制", "篮板反弹", "抛物线轨迹", "命中率统计"]
+            },
+            {
+                id: 64,
+                title: "冰球",
+                icon: "🏒",
+                desc: "冰面滑行物理效果，球杆击打冰球",
+                features: ["冰面滑行物理", "球杆控制", "AI对手", "进球得分"]
+            },
+            {
+                id: 65,
+                title: "曲棍球",
+                icon: "🏑",
+                desc: "曲棍球场地，控制球杆击球入网",
+                features: ["球杆控制", "物理碰撞", "AI对手", "场地分隔"]
+            },
+            {
+                id: 66,
+                title: "棒球",
+                icon: "⚾",
+                desc: "投球和击球机制，把握时机击球得分",
+                features: ["投球机制", "击球时机", "球飞行距离", "安打统计"]
+            },
+            {
+                id: 67,
+                title: "橄榄球",
+                icon: "🏈",
+                desc: "跑动机制，控制球员躲避对手到达达阵区",
+                features: ["键盘控制移动", "躲避对手", "达阵得分", "障碍物生成"]
+            },
+            {
+                id: 68,
+                title: "排球",
+                icon: "🏐",
+                desc: "扣球机制，键盘控制球员移动和扣球",
+                features: ["键盘控制移动", "扣球机制", "AI回球", "网前对战"]
+            },
+            {
+                id: 69,
+                title: "手球",
+                icon: "🤾",
+                desc: "投球机制，拖拽控制投球方向和力度",
+                features: ["拖拽投球", "抛物线轨迹", "守门员AI", "进球得分"]
+            },
+            {
+                id: 70,
+                title: "水球",
+                icon: "🤽",
+                desc: "水中物理效果，球在水中移动有阻力",
+                features: ["水中阻力效果", "拖拽投球", "守门员AI", "进球得分"]
+            }
+        ];
+
+        const gamesGrid = document.getElementById('gamesGrid');
+
+        function renderGames() {
+            gamesGrid.innerHTML = '';
+            
+            ballGames.forEach(game => {
+                const gameCard = document.createElement('div');
+                gameCard.className = 'game-card';
+                
+                let featuresHTML = '';
+                game.features.forEach(feature => {
+                    featuresHTML += `<li>${feature}</li>`;
+                });
+                
+                gameCard.innerHTML = `
+                    <div class="game-header">
+                        <div class="game-icon">${game.icon}</div>
+                        <div class="game-info">
+                            <div class="game-number">游戏 #${game.id}</div>
+                            <div class="game-title">${game.title}</div>
+                            <div class="improved-badge">已改进</div>
+                        </div>
+                    </div>
+                    <div class="game-desc">${game.desc}</div>
+                    <div class="game-features">
+                        <div class="feature-title">改进特性：</div>
+                        <ul class="feature-list">
+                            ${featuresHTML}
+                        </ul>
+                    </div>
+                    <a href="game-${String(game.id).padStart(3, '0')}/index.html" class="play-btn" target="_blank">
+                        立即游戏
+                    </a>
+                `;
+                
+                gamesGrid.appendChild(gameCard);
+            });
+        }
+
+        // 初始渲染
+        renderGames();
+    </script>
+</body>
+</html>

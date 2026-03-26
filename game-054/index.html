@@ -33,25 +33,103 @@
         function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
         const court = document.createElement('div');
-        court.style.cssText = 'width:200px;height:200px;background:#e67e22;border-radius:10px;margin:15px auto;position:relative;';
+        court.style.cssText = 'width:400px;height:300px;background:#e67e22;border-radius:10px;margin:15px auto;position:relative;overflow:hidden;';
         
         const hoop = document.createElement('div');
-        hoop.style.cssText = 'width:60px;height:40px;border:5px solid white;border-top:none;position:absolute;top:30px;left:70px;border-radius:0 0 30px 30px;';
+        hoop.style.cssText = 'width:60px;height:40px;border:5px solid white;border-top:none;position:absolute;top:30px;left:170px;border-radius:0 0 30px 30px;';
         court.appendChild(hoop);
         
+        const backboard = document.createElement('div');
+        backboard.style.cssText = 'position:absolute;top:20px;left:230px;width:10px;height:80px;background:white;';
+        court.appendChild(backboard);
+        
+        const ball = document.createElement('div');
+        ball.style.cssText = 'position:absolute;width:20px;height:20px;background:#f39c12;border-radius:50%;left:190px;top:250px;';
+        court.appendChild(ball);
+        
+        let ballX = 190, ballY = 250, ballVX = 0, ballVY = 0;
+        let isDragging = false;
+        let dragStartX, dragStartY;
         let attempts = 0, made = 0;
+        const gravity = 0.2;
         
-        court.onclick = () => {
-            attempts++;
-            if(Math.random() > 0.4) {
-                made++;
-                addScore(2);
-                messageDisplay.textContent = '进了! ' + made + '/' + attempts;
-            } else {
-                messageDisplay.textContent = '没进! ' + made + '/' + attempts;
+        function resetBall() {
+            ballX = 190; ballY = 250; ballVX = 0; ballVY = 0;
+        }
+        
+        function update() {
+            if(!isDragging && (ballVX !== 0 || ballVY !== 0)) {
+                ballX += ballVX;
+                ballY += ballVY;
+                ballVY += gravity;
+                
+                if(ballY > 280) {
+                    resetBall();
+                    messageDisplay.textContent = '没进! ' + made + '/' + attempts;
+                }
+                
+                if(ballX < 10 || ballX > 380) {
+                    ballVX = -ballVX * 0.8;
+                }
+                
+                if(ballX > 230 && ballY < 100) {
+                    ballVX = -Math.abs(ballVX) * 0.7;
+                    ballX = 225;
+                }
+                
+                if(ballX > 170 && ballX < 230 && ballY > 30 && ballY < 70) {
+                    made++;
+                    addScore(2);
+                    messageDisplay.textContent = '进了! ' + made + '/' + attempts;
+                    setTimeout(resetBall, 500);
+                    ballVX = 0; ballVY = 0;
+                }
             }
-        };
+            
+            ball.style.left = ballX + 'px';
+            ball.style.top = ballY + 'px';
+        }
         
+        court.addEventListener('mousedown', e => {
+            if(ballVX === 0 && ballVY === 0) {
+                isDragging = true;
+                const rect = court.getBoundingClientRect();
+                dragStartX = e.clientX - rect.left;
+                dragStartY = e.clientY - rect.top;
+            }
+        });
+        
+        court.addEventListener('mousemove', e => {
+            if(isDragging) {
+                const rect = court.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                const dx = dragStartX - mouseX;
+                const dy = dragStartY - mouseY;
+                ballX = dragStartX + dx * 0.2;
+                ballY = dragStartY + dy * 0.2;
+            }
+        });
+        
+        court.addEventListener('mouseup', e => {
+            if(isDragging) {
+                isDragging = false;
+                attempts++;
+                const rect = court.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                ballVX = (dragStartX - mouseX) * 0.15;
+                ballVY = (dragStartY - mouseY) * 0.15;
+            }
+        });
+        
+        court.addEventListener('mouseleave', () => {
+            if(isDragging) {
+                isDragging = false;
+            }
+        });
+        
+        setInterval(update, 20);
         document.querySelector('.game-area').appendChild(court);
     
     </script>

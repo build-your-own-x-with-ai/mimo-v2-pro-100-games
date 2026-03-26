@@ -33,35 +33,93 @@
         function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
         const rink = document.createElement('div');
-        rink.style.cssText = 'width:280px;height:180px;background:#ecf0f1;border-radius:10px;margin:15px auto;position:relative;';
+        rink.style.cssText = 'width:400px;height:300px;background:#ecf0f1;border-radius:10px;margin:15px auto;position:relative;overflow:hidden;';
         
-        let puckX = 130, puckY = 80;
+        const playerGoal = document.createElement('div');
+        playerGoal.style.cssText = 'position:absolute;left:0;top:100px;width:20px;height:100px;background:#e74c3c;';
+        rink.appendChild(playerGoal);
         
-        function render() {
-            rink.innerHTML = '';
-            const puck = document.createElement('div');
-            puck.style.cssText = 'position:absolute;left:'+puckX+'px;top:'+puckY+'px;width:20px;height:20px;background:#2c3e50;border-radius:50%;';
-            rink.appendChild(puck);
-            
-            const goal = document.createElement('div');
-            goal.style.cssText = 'position:absolute;right:0;top:60px;width:20px;height:60px;background:#e74c3c;';
-            rink.appendChild(goal);
+        const aiGoal = document.createElement('div');
+        aiGoal.style.cssText = 'position:absolute;right:0;top:100px;width:20px;height:100px;background:#3498db;';
+        rink.appendChild(aiGoal);
+        
+        const puck = document.createElement('div');
+        puck.style.cssText = 'position:absolute;width:20px;height:20px;background:#2c3e50;border-radius:50%;left:190px;top:140px;';
+        rink.appendChild(puck);
+        
+        const playerStick = document.createElement('div');
+        playerStick.style.cssText = 'position:absolute;left:50px;top:130px;width:15px;height:60px;background:#e74c3c;border-radius:5px;';
+        rink.appendChild(playerStick);
+        
+        const aiStick = document.createElement('div');
+        aiStick.style.cssText = 'position:absolute;right:50px;top:130px;width:15px;height:60px;background:#3498db;border-radius:5px;';
+        rink.appendChild(aiStick);
+        
+        let puckX = 190, puckY = 140, puckVX = 0, puckVY = 0;
+        let playerY = 130, aiY = 130;
+        const stickWidth = 15, stickHeight = 60;
+        const rinkWidth = 400, rinkHeight = 300;
+        const friction = 0.99;
+        
+        function resetPuck() {
+            puckX = 190; puckY = 140; puckVX = 0; puckVY = 0;
         }
         
-        rink.onclick = (e) => {
-            const rect = rink.getBoundingClientRect();
-            puckX = Math.max(0, Math.min(260, e.clientX - rect.left - 10));
-            puckY = Math.max(0, Math.min(160, e.clientY - rect.top - 10));
+        function update() {
+            puckX += puckVX;
+            puckY += puckVY;
+            puckVX *= friction;
+            puckVY *= friction;
             
-            if(puckX > 240 && puckY > 60 && puckY < 120) {
-                addScore(10);
-                messageDisplay.textContent = '进球!';
-                puckX = 130; puckY = 80;
+            if(Math.abs(puckVX) < 0.1) puckVX = 0;
+            if(Math.abs(puckVY) < 0.1) puckVY = 0;
+            
+            if(puckY < 0 || puckY > rinkHeight - 20) {
+                puckVY = -puckVY;
+                puckY = Math.max(0, Math.min(rinkHeight - 20, puckY));
             }
-            render();
-        };
+            
+            if(puckX < stickWidth + 50 && puckY + 20 > playerY && puckY < playerY + stickHeight) {
+                puckVX = Math.abs(puckVX) + 2;
+                puckVY += (puckY - (playerY + stickHeight/2)) * 0.1;
+            }
+            
+            if(puckX > rinkWidth - stickWidth - 50 - 20 && puckY + 20 > aiY && puckY < aiY + stickHeight) {
+                puckVX = -Math.abs(puckVX) - 2;
+                puckVY += (puckY - (aiY + stickHeight/2)) * 0.1;
+            }
+            
+            if(puckX < 20 && puckY > 100 && puckY < 200) {
+                addScore(10);
+                messageDisplay.textContent = 'AI得分!';
+                setTimeout(resetPuck, 1000);
+                puckVX = 0; puckVY = 0;
+            }
+            
+            if(puckX > rinkWidth - 20 - 20 && puckY > 100 && puckY < 200) {
+                addScore(10);
+                messageDisplay.textContent = '玩家得分!';
+                setTimeout(resetPuck, 1000);
+                puckVX = 0; puckVY = 0;
+            }
+            
+            const aiTarget = puckY - stickHeight/2;
+            aiY += (aiTarget - aiY) * 0.1;
+            aiY = Math.max(0, Math.min(rinkHeight - stickHeight, aiY));
+            
+            puck.style.left = puckX + 'px';
+            puck.style.top = puckY + 'px';
+            playerStick.style.top = playerY + 'px';
+            aiStick.style.top = aiY + 'px';
+        }
         
-        render();
+        setInterval(update, 20);
+        
+        document.addEventListener('mousemove', e => {
+            const rect = rink.getBoundingClientRect();
+            playerY = Math.max(0, Math.min(rinkHeight - stickHeight, e.clientY - rect.top - stickHeight/2));
+        });
+        
         document.querySelector('.game-area').appendChild(rink);
     
     </script>

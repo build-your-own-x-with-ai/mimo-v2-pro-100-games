@@ -32,20 +32,101 @@
         const scoreDisplay = document.getElementById('score');
         function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
+        const field = document.createElement('div');
+        field.style.cssText = 'width:400px;height:300px;background:#87ceeb;border-radius:10px;margin:15px auto;position:relative;overflow:hidden;';
+        
         const board = document.createElement('div');
-        board.style.cssText = 'width:180px;height:180px;border-radius:50%;background:conic-gradient(#e74c3c 0deg 18deg,#2c3e50 18deg 36deg,#e74c3c 36deg 54deg,#2c3e50 54deg 72deg);margin:15px auto;cursor:pointer;border:10px solid #8b4513;';
+        board.style.cssText = 'position:absolute;right:50px;top:50px;width:180px;height:180px;border-radius:50%;background:conic-gradient(#e74c3c 0deg 18deg,#2c3e50 18deg 36deg,#e74c3c 36deg 54deg,#2c3e50 54deg 72deg);border:10px solid #8b4513;';
+        field.appendChild(board);
         
-        board.onclick = (e) => {
-            const rect = board.getBoundingClientRect();
-            const x = e.clientX - rect.left - 90, y = e.clientY - rect.top - 90;
-            const dist = Math.sqrt(x*x + y*y);
-            if(dist < 20) { addScore(50); messageDisplay.textContent = '靶心! 50分'; }
-            else if(dist < 50) { addScore(25); messageDisplay.textContent = '25分'; }
-            else if(dist < 70) { addScore(10); messageDisplay.textContent = '10分'; }
-            else messageDisplay.textContent = '脱靶!';
-        };
+        const dart = document.createElement('div');
+        dart.style.cssText = 'position:absolute;left:50px;top:140px;width:10px;height:30px;background:#e74c3c;border-radius:5px;';
+        field.appendChild(dart);
         
-        document.querySelector('.game-area').appendChild(board);
+        let dartX = 50, dartY = 140, dartVX = 0, dartVY = 0;
+        let isDragging = false;
+        let dragStartX, dragStartY;
+        let isFlying = false;
+        
+        function resetDart() {
+            dartX = 50; dartY = 140; dartVX = 0; dartVY = 0;
+            isFlying = false;
+        }
+        
+        function update() {
+            if(isFlying) {
+                dartX += dartVX;
+                dartY += dartVY;
+                
+                if(dartX > 250 && dartX < 430 && dartY > 50 && dartY < 230) {
+                    const targetX = 340, targetY = 140;
+                    const dist = Math.sqrt((dartX - targetX)**2 + (dartY - targetY)**2);
+                    if(dist < 20) {
+                        addScore(50);
+                        messageDisplay.textContent = '靶心! 50分';
+                    } else if(dist < 50) {
+                        addScore(25);
+                        messageDisplay.textContent = '25分';
+                    } else if(dist < 70) {
+                        addScore(10);
+                        messageDisplay.textContent = '10分';
+                    } else {
+                        messageDisplay.textContent = '脱靶!';
+                    }
+                    setTimeout(resetDart, 500);
+                    dartVX = 0; dartVY = 0;
+                }
+                
+                if(dartY > 280) {
+                    resetDart();
+                }
+            }
+            
+            dart.style.left = dartX + 'px';
+            dart.style.top = dartY + 'px';
+        }
+        
+        field.addEventListener('mousedown', e => {
+            if(!isFlying) {
+                isDragging = true;
+                const rect = field.getBoundingClientRect();
+                dragStartX = e.clientX - rect.left;
+                dragStartY = e.clientY - rect.top;
+            }
+        });
+        
+        field.addEventListener('mousemove', e => {
+            if(isDragging) {
+                const rect = field.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                const dx = dragStartX - mouseX;
+                const dy = dragStartY - mouseY;
+                dartX = dragStartX + dx * 0.5;
+                dartY = dragStartY + dy * 0.5;
+            }
+        });
+        
+        field.addEventListener('mouseup', e => {
+            if(isDragging) {
+                isDragging = false;
+                isFlying = true;
+                const rect = field.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                dartVX = (dragStartX - mouseX) * 0.3;
+                dartVY = (dragStartY - mouseY) * 0.3;
+            }
+        });
+        
+        field.addEventListener('mouseleave', () => {
+            if(isDragging) {
+                isDragging = false;
+            }
+        });
+        
+        setInterval(update, 20);
+        document.querySelector('.game-area').appendChild(field);
     
     </script>
 </body>

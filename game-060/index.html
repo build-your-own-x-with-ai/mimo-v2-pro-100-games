@@ -33,50 +33,76 @@
         function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
         const table = document.createElement('div');
-        table.style.cssText = 'width:300px;height:180px;background:#2980b9;border-radius:10px;margin:15px auto;position:relative;';
+        table.style.cssText = 'width:400px;height:300px;background:#2980b9;border-radius:10px;margin:15px auto;position:relative;overflow:hidden;';
         
-        let ballX = 140, ballY = 90, ballDX = 3, ballDY = 2;
-        let paddleY = 70;
+        let ballX = 200, ballY = 150, ballDX = 4, ballDY = 3;
+        let paddleY = 125;
         let hits = 0;
+        let speed = 1;
+        const paddleWidth = 10, paddleHeight = 60;
+        const ballSize = 15;
+        const tableWidth = 400, tableHeight = 300;
         
-        function render() {
-            table.innerHTML = '';
-            const ball = document.createElement('div');
-            ball.style.cssText = 'position:absolute;left:'+ballX+'px;top:'+ballY+'px;width:15px;height:15px;background:white;border-radius:50%;';
-            table.appendChild(ball);
-            
-            const paddle = document.createElement('div');
-            paddle.style.cssText = 'position:absolute;left:10px;top:'+paddleY+'px;width:10px;height:50px;background:#e74c3c;border-radius:5px;';
-            table.appendChild(paddle);
-        }
+        const ball = document.createElement('div');
+        ball.style.cssText = 'position:absolute;width:'+ballSize+'px;height:'+ballSize+'px;background:white;border-radius:50%;';
+        table.appendChild(ball);
         
-        setInterval(() => {
-            ballX += ballDX;
-            ballY += ballDY;
+        const paddle = document.createElement('div');
+        paddle.style.cssText = 'position:absolute;left:10px;width:'+paddleWidth+'px;height:'+paddleHeight+'px;background:#e74c3c;border-radius:5px;';
+        table.appendChild(paddle);
+        
+        const scoreText = document.createElement('div');
+        scoreText.style.cssText = 'position:absolute;top:10px;right:10px;color:white;font-size:16px;';
+        table.appendChild(scoreText);
+        
+        function update() {
+            ballX += ballDX * speed;
+            ballY += ballDY * speed;
             
-            if(ballY < 0 || ballY > 165) ballDY = -ballDY;
-            if(ballX > 285) ballDX = -ballDX;
+            if(ballY < 0 || ballY > tableHeight - ballSize) {
+                ballDY = -ballDY;
+                ballY = Math.max(0, Math.min(tableHeight - ballSize, ballY));
+            }
             
-            if(ballX < 25 && ballY >= paddleY && ballY <= paddleY + 50) {
+            if(ballX > tableWidth - ballSize - 10) {
+                ballDX = -ballDX;
+                ballX = tableWidth - ballSize - 10;
+            }
+            
+            if(ballX < paddleWidth + 10 && ballY + ballSize > paddleY && ballY < paddleY + paddleHeight) {
                 ballDX = Math.abs(ballDX);
                 hits++;
-                addScore(5);
+                addScore(10);
+                speed = Math.min(speed + 0.1, 3);
+                const hitPos = (ballY + ballSize/2 - paddleY) / paddleHeight;
+                ballDY = (hitPos - 0.5) * 8;
                 messageDisplay.textContent = '回击! ' + hits + '次';
             }
             
             if(ballX < 0) {
-                ballX = 140; ballY = 90; hits = 0;
+                ballX = 200; ballY = 150; hits = 0; speed = 1;
+                ballDX = 4; ballDY = 3;
                 messageDisplay.textContent = '失分!';
             }
-            render();
-        }, 30);
+            
+            ball.style.left = ballX + 'px';
+            ball.style.top = ballY + 'px';
+            paddle.style.top = paddleY + 'px';
+            scoreText.textContent = '分数: ' + score;
+        }
+        
+        setInterval(update, 20);
         
         document.addEventListener('mousemove', e => {
             const rect = table.getBoundingClientRect();
-            paddleY = Math.max(0, Math.min(130, e.clientY - rect.top - 25));
+            paddleY = Math.max(0, Math.min(tableHeight - paddleHeight, e.clientY - rect.top - paddleHeight/2));
         });
         
-        render();
+        document.addEventListener('keydown', e => {
+            if(e.key === 'ArrowUp') paddleY = Math.max(0, paddleY - 20);
+            if(e.key === 'ArrowDown') paddleY = Math.min(tableHeight - paddleHeight, paddleY + 20);
+        });
+        
         document.querySelector('.game-area').appendChild(table);
     
     </script>

@@ -33,37 +33,85 @@
         function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
         const field = document.createElement('div');
-        field.style.cssText = 'width:300px;height:100px;background:#27ae60;border-radius:10px;margin:15px auto;position:relative;';
+        field.style.cssText = 'width:400px;height:300px;background:#27ae60;border-radius:10px;margin:15px auto;position:relative;overflow:hidden;';
         
-        let pos = 20;
+        const endZone = document.createElement('div');
+        endZone.style.cssText = 'position:absolute;right:0;top:0;width:60px;height:100%;background:#2ecc71;';
+        field.appendChild(endZone);
         
-        function render() {
-            field.innerHTML = '';
-            const player = document.createElement('div');
-            player.style.cssText = 'position:absolute;left:'+pos+'px;top:35px;font-size:30px;';
-            player.textContent = '🏈';
-            field.appendChild(player);
-            
-            for(let i=0;i<5;i++) {
-                const line = document.createElement('div');
-                line.style.cssText = 'position:absolute;left:'+(50+i*50)+'px;top:0;width:2px;height:100%;background:white;';
-                field.appendChild(line);
-            }
+        const player = document.createElement('div');
+        player.style.cssText = 'position:absolute;left:20px;top:135px;width:30px;height:30px;background:#e74c3c;border-radius:50%;';
+        field.appendChild(player);
+        
+        const ball = document.createElement('div');
+        ball.style.cssText = 'position:absolute;left:10px;top:145px;font-size:20px;';
+        ball.textContent = '🏈';
+        field.appendChild(ball);
+        
+        let playerX = 20, playerY = 135;
+        let speed = 3;
+        let enemies = [];
+        const fieldWidth = 400, fieldHeight = 300;
+        
+        function createEnemy() {
+            const enemy = document.createElement('div');
+            enemy.style.cssText = 'position:absolute;width:25px;height:25px;background:#3498db;border-radius:50%;';
+            enemy.x = fieldWidth;
+            enemy.y = Math.random() * (fieldHeight - 25);
+            enemy.speed = Math.random() * 2 + 1;
+            field.appendChild(enemy);
+            enemies.push(enemy);
         }
         
-        field.onclick = () => {
-            pos += 20;
-            if(pos >= 250) {
+        function update() {
+            playerX += speed;
+            if(playerX > fieldWidth - 60) {
                 addScore(7);
-                messageDisplay.textContent = '达阵!';
-                pos = 20;
-            } else {
-                messageDisplay.textContent = '前进: ' + pos + '码';
+                messageDisplay.textContent = '达阵! 得分+7';
+                playerX = 20;
+                playerY = 135;
+                enemies.forEach(e => e.remove());
+                enemies = [];
             }
-            render();
-        };
+            
+            if(Math.random() < 0.02) {
+                createEnemy();
+            }
+            
+            enemies.forEach((enemy, index) => {
+                enemy.x -= enemy.speed;
+                enemy.style.left = enemy.x + 'px';
+                enemy.style.top = enemy.y + 'px';
+                
+                if(enemy.x < 0) {
+                    enemy.remove();
+                    enemies.splice(index, 1);
+                }
+                
+                if(Math.abs(playerX - enemy.x) < 30 && Math.abs(playerY - enemy.y) < 30) {
+                    messageDisplay.textContent = '被拦截!';
+                    playerX = 20;
+                    playerY = 135;
+                    enemies.forEach(e => e.remove());
+                    enemies = [];
+                }
+            });
+            
+            player.style.left = playerX + 'px';
+            player.style.top = playerY + 'px';
+            ball.style.left = (playerX - 10) + 'px';
+            ball.style.top = (playerY + 10) + 'px';
+        }
         
-        render();
+        setInterval(update, 20);
+        
+        document.addEventListener('keydown', e => {
+            if(e.key === 'ArrowUp') playerY = Math.max(0, playerY - speed);
+            if(e.key === 'ArrowDown') playerY = Math.min(fieldHeight - 30, playerY + speed);
+            if(e.key === 'ArrowLeft') playerX = Math.max(0, playerX - speed);
+            if(e.key === 'ArrowRight') playerX = Math.min(fieldWidth - 30, playerX + speed);
+        });
+        
         document.querySelector('.game-area').appendChild(field);
     
     </script>

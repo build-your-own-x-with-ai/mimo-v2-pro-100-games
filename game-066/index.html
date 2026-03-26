@@ -33,26 +33,80 @@
         function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
         const field = document.createElement('div');
-        field.style.cssText = 'width:200px;height:200px;background:#27ae60;border-radius:50%;margin:15px auto;display:flex;align-items:center;justify-content:center;cursor:pointer;';
+        field.style.cssText = 'width:400px;height:300px;background:#27ae60;border-radius:10px;margin:15px auto;position:relative;overflow:hidden;';
         
-        let pitches = 0, hits = 0;
+        const pitcher = document.createElement('div');
+        pitcher.style.cssText = 'position:absolute;left:180px;top:50px;font-size:30px;';
+        pitcher.textContent = '🥎';
+        field.appendChild(pitcher);
+        
+        const batter = document.createElement('div');
+        batter.style.cssText = 'position:absolute;left:100px;top:200px;font-size:30px;';
+        batter.textContent = '⚾';
+        field.appendChild(batter);
         
         const ball = document.createElement('div');
-        ball.style.cssText = 'font-size:40px;';
-        ball.textContent = '⚾';
+        ball.style.cssText = 'position:absolute;width:15px;height:15px;background:white;border-radius:50%;left:185px;top:80px;';
         field.appendChild(ball);
         
+        let ballX = 185, ballY = 80, ballVX = 0, ballVY = 0;
+        let isPitching = false, isHit = false;
+        let pitches = 0, hits = 0;
+        let pitchSpeed = 5;
+        
+        function resetBall() {
+            ballX = 185; ballY = 80; ballVX = 0; ballVY = 0;
+            isPitching = false; isHit = false;
+        }
+        
+        function pitch() {
+            if(!isPitching && !isHit) {
+                isPitching = true;
+                pitches++;
+                ballVY = pitchSpeed;
+                ballVX = (Math.random() - 0.5) * 2;
+            }
+        }
+        
         field.onclick = () => {
-            pitches++;
-            if(Math.random() > 0.5) {
+            if(isPitching && !isHit) {
+                isHit = true;
                 hits++;
+                const hitPower = Math.random() * 10 + 5;
+                ballVY = -hitPower;
+                ballVX = (Math.random() - 0.5) * 8;
                 addScore(10);
                 messageDisplay.textContent = '安打! ' + hits + '/' + pitches;
-            } else {
-                messageDisplay.textContent = '出局! ' + hits + '/' + pitches;
+            } else if(!isPitching) {
+                pitch();
             }
         };
         
+        function update() {
+            if(isPitching || isHit) {
+                ballX += ballVX;
+                ballY += ballVY;
+                
+                if(isHit) {
+                    ballVY += 0.2;
+                }
+                
+                if(ballY > 280 || ballX < 0 || ballX > 380) {
+                    if(isHit) {
+                        messageDisplay.textContent = '击球成功! 距离: ' + Math.floor(280 - ballY) + '米';
+                    } else {
+                        messageDisplay.textContent = '出局! ' + hits + '/' + pitches;
+                    }
+                    setTimeout(resetBall, 1000);
+                    ballVX = 0; ballVY = 0;
+                }
+            }
+            
+            ball.style.left = ballX + 'px';
+            ball.style.top = ballY + 'px';
+        }
+        
+        setInterval(update, 20);
         document.querySelector('.game-area').appendChild(field);
     
     </script>

@@ -33,37 +33,88 @@
         function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
         const lane = document.createElement('div');
-        lane.style.cssText = 'width:200px;height:180px;background:#deb887;border-radius:10px;margin:15px auto;position:relative;';
+        lane.style.cssText = 'width:300px;height:250px;background:#deb887;border-radius:10px;margin:15px auto;position:relative;overflow:hidden;';
         
-        let pins = Array(5).fill(true);
+        const pinRows = [[0], [-1,1], [-2,0,2], [-3,-1,1,3]];
+        let pins = [];
+        pinRows.forEach((row, rowIndex) => {
+            row.forEach(offset => {
+                pins.push({
+                    x: 150 + offset * 25,
+                    y: 30 + rowIndex * 30,
+                    up: true
+                });
+            });
+        });
+        
+        const ball = document.createElement('div');
+        ball.style.cssText = 'position:absolute;width:20px;height:20px;background:#333;border-radius:50%;left:140px;top:200px;';
+        lane.appendChild(ball);
+        
+        let ballX = 140, ballY = 200, ballDX = 0, ballDY = -3;
+        let isThrowing = false;
         
         function render() {
-            lane.innerHTML = '';
-            pins.forEach((up,i) => {
-                if(up) {
-                    const pin = document.createElement('div');
-                    pin.style.cssText = 'position:absolute;top:20px;left:'+(60+i*20)+'px;font-size:25px;';
-                    pin.textContent = '🎳';
-                    lane.appendChild(pin);
+            pins.forEach((pin, index) => {
+                let pinElem = document.getElementById('pin' + index);
+                if(!pinElem) {
+                    pinElem = document.createElement('div');
+                    pinElem.id = 'pin' + index;
+                    pinElem.style.cssText = 'position:absolute;font-size:20px;transition:transform 0.3s;';
+                    pinElem.textContent = '🎳';
+                    lane.appendChild(pinElem);
+                }
+                pinElem.style.left = pin.x + 'px';
+                pinElem.style.top = pin.y + 'px';
+                if(!pin.up) {
+                    pinElem.style.transform = 'rotate(90deg)';
+                    pinElem.style.opacity = '0.5';
                 }
             });
+            ball.style.left = ballX + 'px';
+            ball.style.top = ballY + 'px';
         }
         
         lane.onclick = () => {
-            const knocked = Math.floor(Math.random() * (pins.filter(p=>p).length + 1));
-            let count = 0;
-            pins = pins.map(p => {
-                if(p && count < knocked) { count++; return false; }
-                return p;
-            });
-            render();
-            addScore(knocked * 10);
-            messageDisplay.textContent = '击倒' + knocked + '个!';
-            if(!pins.some(p=>p)) {
-                setTimeout(() => { pins = Array(5).fill(true); render(); }, 1000);
+            if(!isThrowing) {
+                isThrowing = true;
+                ballX = 140; ballY = 200;
+                ballDX = (Math.random() - 0.5) * 2;
+                ballDY = -3;
             }
         };
         
+        function update() {
+            if(isThrowing) {
+                ballX += ballDX;
+                ballY += ballDY;
+                
+                if(ballX < 0 || ballX > 280) ballDX = -ballDX;
+                
+                pins.forEach(pin => {
+                    if(pin.up && Math.abs(ballX - pin.x) < 20 && Math.abs(ballY - pin.y) < 20) {
+                        pin.up = false;
+                        addScore(10);
+                    }
+                });
+                
+                if(ballY < 10) {
+                    isThrowing = false;
+                    const knocked = pins.filter(p => !p.up).length;
+                    messageDisplay.textContent = '击倒 ' + knocked + ' 个! 得分 +' + knocked * 10;
+                    
+                    if(!pins.some(p => p.up)) {
+                        setTimeout(() => {
+                            pins.forEach(p => p.up = true);
+                            messageDisplay.textContent = '全中! 重新开始';
+                        }, 1000);
+                    }
+                }
+            }
+            render();
+        }
+        
+        setInterval(update, 20);
         render();
         document.querySelector('.game-area').appendChild(lane);
     

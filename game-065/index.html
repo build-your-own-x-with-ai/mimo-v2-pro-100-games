@@ -33,34 +33,94 @@
         function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
         const field = document.createElement('div');
-        field.style.cssText = 'width:280px;height:180px;background:#27ae60;border-radius:10px;margin:15px auto;position:relative;';
+        field.style.cssText = 'width:400px;height:300px;background:#27ae60;border-radius:10px;margin:15px auto;position:relative;overflow:hidden;';
         
-        let ballX = 130, ballY = 80;
+        const playerGoal = document.createElement('div');
+        playerGoal.style.cssText = 'position:absolute;left:0;top:100px;width:20px;height:100px;background:#e74c3c;';
+        field.appendChild(playerGoal);
         
-        function render() {
-            field.innerHTML = '';
-            const ball = document.createElement('div');
-            ball.style.cssText = 'position:absolute;left:'+ballX+'px;top:'+ballY+'px;width:15px;height:15px;background:white;border-radius:50%;';
-            field.appendChild(ball);
+        const aiGoal = document.createElement('div');
+        aiGoal.style.cssText = 'position:absolute;right:0;top:100px;width:20px;height:100px;background:#3498db;';
+        field.appendChild(aiGoal);
+        
+        const ball = document.createElement('div');
+        ball.style.cssText = 'position:absolute;width:15px;height:15px;background:white;border-radius:50%;left:192px;top:142px;';
+        field.appendChild(ball);
+        
+        const playerStick = document.createElement('div');
+        playerStick.style.cssText = 'position:absolute;left:50px;top:130px;width:15px;height:60px;background:#e74c3c;border-radius:5px;';
+        field.appendChild(playerStick);
+        
+        const aiStick = document.createElement('div');
+        aiStick.style.cssText = 'position:absolute;right:50px;top:130px;width:15px;height:60px;background:#3498db;border-radius:5px;';
+        field.appendChild(aiStick);
+        
+        let ballX = 192, ballY = 142, ballVX = 0, ballVY = 0;
+        let playerY = 130, aiY = 130;
+        const stickWidth = 15, stickHeight = 60;
+        const fieldWidth = 400, fieldHeight = 300;
+        const friction = 0.98;
+        
+        function resetBall() {
+            ballX = 192; ballY = 142; ballVX = 0; ballVY = 0;
         }
         
-        field.onclick = (e) => {
-            const rect = field.getBoundingClientRect();
-            const clickX = e.clientX - rect.left;
-            const clickY = e.clientY - rect.top;
+        function update() {
+            ballX += ballVX;
+            ballY += ballVY;
+            ballVX *= friction;
+            ballVY *= friction;
             
-            const dx = clickX - ballX, dy = clickY - ballY;
-            const dist = Math.sqrt(dx*dx + dy*dy);
+            if(Math.abs(ballVX) < 0.1) ballVX = 0;
+            if(Math.abs(ballVY) < 0.1) ballVY = 0;
             
-            if(dist < 30) {
-                ballX = Math.max(0, Math.min(265, ballX + dx*0.5));
-                ballY = Math.max(0, Math.min(165, ballY + dy*0.5));
+            if(ballY < 0 || ballY > fieldHeight - 15) {
+                ballVY = -ballVY;
+                ballY = Math.max(0, Math.min(fieldHeight - 15, ballY));
+            }
+            
+            if(ballX < stickWidth + 50 && ballY + 15 > playerY && ballY < playerY + stickHeight) {
+                ballVX = Math.abs(ballVX) + 2;
+                ballVY += (ballY - (playerY + stickHeight/2)) * 0.1;
                 addScore(5);
             }
-            render();
-        };
+            
+            if(ballX > fieldWidth - stickWidth - 50 - 15 && ballY + 15 > aiY && ballY < aiY + stickHeight) {
+                ballVX = -Math.abs(ballVX) - 2;
+                ballVY += (ballY - (aiY + stickHeight/2)) * 0.1;
+            }
+            
+            if(ballX < 20 && ballY > 100 && ballY < 200) {
+                addScore(10);
+                messageDisplay.textContent = 'AI得分!';
+                setTimeout(resetBall, 1000);
+                ballVX = 0; ballVY = 0;
+            }
+            
+            if(ballX > fieldWidth - 20 - 15 && ballY > 100 && ballY < 200) {
+                addScore(10);
+                messageDisplay.textContent = '玩家得分!';
+                setTimeout(resetBall, 1000);
+                ballVX = 0; ballVY = 0;
+            }
+            
+            const aiTarget = ballY - stickHeight/2;
+            aiY += (aiTarget - aiY) * 0.1;
+            aiY = Math.max(0, Math.min(fieldHeight - stickHeight, aiY));
+            
+            ball.style.left = ballX + 'px';
+            ball.style.top = ballY + 'px';
+            playerStick.style.top = playerY + 'px';
+            aiStick.style.top = aiY + 'px';
+        }
         
-        render();
+        setInterval(update, 20);
+        
+        document.addEventListener('mousemove', e => {
+            const rect = field.getBoundingClientRect();
+            playerY = Math.max(0, Math.min(fieldHeight - stickHeight, e.clientY - rect.top - stickHeight/2));
+        });
+        
         document.querySelector('.game-area').appendChild(field);
     
     </script>

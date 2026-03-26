@@ -32,20 +32,107 @@
         const scoreDisplay = document.getElementById('score');
         function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
+        const field = document.createElement('div');
+        field.style.cssText = 'width:400px;height:300px;background:#87ceeb;border-radius:10px;margin:15px auto;position:relative;overflow:hidden;';
+        
         const target = document.createElement('div');
-        target.style.cssText = 'width:160px;height:160px;border-radius:50%;background:conic-gradient(#e74c3c 0deg 60deg,#fff 60deg 120deg,#e74c3c 120deg 180deg,#fff 180deg 240deg,#e74c3c 240deg 300deg,#fff 300deg 360deg);margin:15px auto;cursor:pointer;border:10px solid #8b4513;';
+        target.style.cssText = 'position:absolute;right:50px;top:50px;width:120px;height:120px;border-radius:50%;background:conic-gradient(#e74c3c 0deg 60deg,#fff 60deg 120deg,#e74c3c 120deg 180deg,#fff 180deg 240deg,#e74c3c 240deg 300deg,#fff 300deg 360deg);border:10px solid #8b4513;';
+        field.appendChild(target);
         
-        target.onclick = (e) => {
-            const rect = target.getBoundingClientRect();
-            const x = e.clientX - rect.left - 80, y = e.clientY - rect.top - 80;
-            const dist = Math.sqrt(x*x + y*y);
-            if(dist < 20) { addScore(50); messageDisplay.textContent = '靶心! 50分'; }
-            else if(dist < 50) { addScore(20); messageDisplay.textContent = '接近! 20分'; }
-            else if(dist < 70) { addScore(10); messageDisplay.textContent = '10分'; }
-            else messageDisplay.textContent = '脱靶!';
-        };
+        const bow = document.createElement('div');
+        bow.style.cssText = 'position:absolute;left:50px;top:140px;width:10px;height:60px;background:#8b4513;border-radius:5px;';
+        field.appendChild(bow);
         
-        document.querySelector('.game-area').appendChild(target);
+        const arrow = document.createElement('div');
+        arrow.style.cssText = 'position:absolute;left:60px;top:170px;width:30px;height:5px;background:#e74c3c;';
+        field.appendChild(arrow);
+        
+        let arrowX = 60, arrowY = 170, arrowVX = 0, arrowVY = 0;
+        let isDragging = false;
+        let dragStartX, dragStartY;
+        let isFlying = false;
+        const gravity = 0.3;
+        
+        function resetArrow() {
+            arrowX = 60; arrowY = 170; arrowVX = 0; arrowVY = 0;
+            isFlying = false;
+        }
+        
+        function update() {
+            if(isFlying) {
+                arrowX += arrowVX;
+                arrowY += arrowVY;
+                arrowVY += gravity;
+                
+                if(arrowY > 280) {
+                    resetArrow();
+                }
+                
+                if(arrowX > 280 && arrowX < 400 && arrowY > 50 && arrowY < 170) {
+                    const targetX = 340, targetY = 110;
+                    const dist = Math.sqrt((arrowX - targetX)**2 + (arrowY - targetY)**2);
+                    if(dist < 20) {
+                        addScore(50);
+                        messageDisplay.textContent = '靶心! 50分';
+                    } else if(dist < 50) {
+                        addScore(20);
+                        messageDisplay.textContent = '接近! 20分';
+                    } else if(dist < 70) {
+                        addScore(10);
+                        messageDisplay.textContent = '10分';
+                    } else {
+                        messageDisplay.textContent = '脱靶!';
+                    }
+                    setTimeout(resetArrow, 500);
+                    arrowVX = 0; arrowVY = 0;
+                }
+            }
+            
+            arrow.style.left = arrowX + 'px';
+            arrow.style.top = arrowY + 'px';
+        }
+        
+        field.addEventListener('mousedown', e => {
+            if(!isFlying) {
+                isDragging = true;
+                const rect = field.getBoundingClientRect();
+                dragStartX = e.clientX - rect.left;
+                dragStartY = e.clientY - rect.top;
+            }
+        });
+        
+        field.addEventListener('mousemove', e => {
+            if(isDragging) {
+                const rect = field.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                const dx = dragStartX - mouseX;
+                const dy = dragStartY - mouseY;
+                arrowX = dragStartX + dx * 0.3;
+                arrowY = dragStartY + dy * 0.3;
+            }
+        });
+        
+        field.addEventListener('mouseup', e => {
+            if(isDragging) {
+                isDragging = false;
+                isFlying = true;
+                const rect = field.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                arrowVX = (dragStartX - mouseX) * 0.2;
+                arrowVY = (dragStartY - mouseY) * 0.2;
+            }
+        });
+        
+        field.addEventListener('mouseleave', () => {
+            if(isDragging) {
+                isDragging = false;
+            }
+        });
+        
+        setInterval(update, 20);
+        document.querySelector('.game-area').appendChild(field);
     
     </script>
 </body>

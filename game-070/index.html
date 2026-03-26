@@ -33,25 +33,113 @@
         function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
         const pool = document.createElement('div');
-        pool.style.cssText = 'width:280px;height:180px;background:#3498db;border-radius:10px;margin:15px auto;position:relative;';
+        pool.style.cssText = 'width:400px;height:300px;background:#3498db;border-radius:10px;margin:15px auto;position:relative;overflow:hidden;';
         
         const goal = document.createElement('div');
-        goal.style.cssText = 'position:absolute;right:20px;top:50px;width:60px;height:80px;background:white;border-radius:5px;';
+        goal.style.cssText = 'position:absolute;right:10px;top:100px;width:60px;height:100px;background:white;border-radius:5px;';
         pool.appendChild(goal);
         
+        const goalkeeper = document.createElement('div');
+        goalkeeper.style.cssText = 'position:absolute;right:20px;top:120px;width:40px;height:60px;background:#e74c3c;border-radius:5px;';
+        pool.appendChild(goalkeeper);
+        
+        const ball = document.createElement('div');
+        ball.style.cssText = 'position:absolute;width:20px;height:20px;background:#f39c12;border-radius:50%;left:50px;top:200px;';
+        pool.appendChild(ball);
+        
+        const player = document.createElement('div');
+        player.style.cssText = 'position:absolute;left:40px;top:190px;width:30px;height:40px;background:#e74c3c;border-radius:5px;';
+        pool.appendChild(player);
+        
+        let ballX = 50, ballY = 200, ballVX = 0, ballVY = 0;
+        let playerX = 40, playerY = 190;
+        let isDragging = false;
+        let dragStartX, dragStartY;
         let shots = 0, goals = 0;
+        const waterResistance = 0.95;
         
-        pool.onclick = () => {
-            shots++;
-            if(Math.random() > 0.4) {
-                goals++;
-                addScore(1);
-                messageDisplay.textContent = '得分! ' + goals + '/' + shots;
-            } else {
-                messageDisplay.textContent = '没进! ' + goals + '/' + shots;
+        function resetBall() {
+            ballX = 50; ballY = 200; ballVX = 0; ballVY = 0;
+            playerX = 40; playerY = 190;
+        }
+        
+        function update() {
+            if(!isDragging && (ballVX !== 0 || ballVY !== 0)) {
+                ballX += ballVX;
+                ballY += ballVY;
+                ballVX *= waterResistance;
+                ballVY *= waterResistance;
+                
+                if(Math.abs(ballVX) < 0.1) ballVX = 0;
+                if(Math.abs(ballVY) < 0.1) ballVY = 0;
+                
+                if(ballX > 330 && ballY > 100 && ballY < 200) {
+                    const keeperX = parseInt(goalkeeper.style.right) || 20;
+                    if(ballY < 120 || ballY > 180) {
+                        goals++;
+                        addScore(1);
+                        messageDisplay.textContent = '进球! ' + goals + '/' + shots;
+                    } else {
+                        messageDisplay.textContent = '被扑出! ' + goals + '/' + shots;
+                    }
+                    setTimeout(resetBall, 1000);
+                    ballVX = 0; ballVY = 0;
+                }
+                
+                if(ballX < 0 || ballX > 380) {
+                    ballVX = -ballVX * 0.8;
+                }
+                if(ballY < 0 || ballY > 280) {
+                    ballVY = -ballVY * 0.8;
+                }
             }
-        };
+            
+            ball.style.left = ballX + 'px';
+            ball.style.top = ballY + 'px';
+            player.style.left = playerX + 'px';
+            player.style.top = playerY + 'px';
+        }
         
+        pool.addEventListener('mousedown', e => {
+            if(ballVX === 0 && ballVY === 0) {
+                isDragging = true;
+                const rect = pool.getBoundingClientRect();
+                dragStartX = e.clientX - rect.left;
+                dragStartY = e.clientY - rect.top;
+            }
+        });
+        
+        pool.addEventListener('mousemove', e => {
+            if(isDragging) {
+                const rect = pool.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                const dx = dragStartX - mouseX;
+                const dy = dragStartY - mouseY;
+                ballX = dragStartX + dx * 0.2;
+                ballY = dragStartY + dy * 0.2;
+            }
+        });
+        
+        pool.addEventListener('mouseup', e => {
+            if(isDragging) {
+                isDragging = false;
+                shots++;
+                const rect = pool.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                ballVX = (dragStartX - mouseX) * 0.1;
+                ballVY = (dragStartY - mouseY) * 0.1;
+            }
+        });
+        
+        pool.addEventListener('mouseleave', () => {
+            if(isDragging) {
+                isDragging = false;
+            }
+        });
+        
+        setInterval(update, 20);
         document.querySelector('.game-area').appendChild(pool);
     
     </script>

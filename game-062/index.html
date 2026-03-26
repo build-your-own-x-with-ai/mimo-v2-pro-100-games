@@ -32,29 +32,117 @@
         const scoreDisplay = document.getElementById('score');
         function addScore(n) { score += n; scoreDisplay.textContent = score; }
         
-        const goal = document.createElement('div');
-        goal.style.cssText = 'width:220px;height:120px;background:#27ae60;border:5px solid white;border-bottom:none;margin:15px auto;position:relative;';
+        const field = document.createElement('div');
+        field.style.cssText = 'width:400px;height:300px;background:#27ae60;border-radius:10px;margin:15px auto;position:relative;overflow:hidden;';
+        
+        const goalArea = document.createElement('div');
+        goalArea.style.cssText = 'position:absolute;top:0;left:100px;width:200px;height:60px;border:3px solid white;border-top:none;';
+        field.appendChild(goalArea);
+        
+        const goalLine = document.createElement('div');
+        goalLine.style.cssText = 'position:absolute;top:0;left:100px;width:200px;height:5px;background:white;';
+        field.appendChild(goalLine);
         
         const ball = document.createElement('div');
-        ball.style.cssText = 'position:absolute;bottom:10px;left:100px;font-size:30px;';
-        ball.textContent = '⚽';
-        goal.appendChild(ball);
+        ball.style.cssText = 'position:absolute;width:20px;height:20px;background:white;border-radius:50%;left:190px;top:250px;';
+        field.appendChild(ball);
         
+        const goalkeeper = document.createElement('div');
+        goalkeeper.style.cssText = 'position:absolute;width:30px;height:40px;background:#e74c3c;border-radius:5px;left:185px;top:10px;';
+        field.appendChild(goalkeeper);
+        
+        let ballX = 190, ballY = 250, ballVX = 0, ballVY = 0;
+        let isDragging = false;
+        let dragStartX, dragStartY;
         let shots = 0, goals = 0;
+        const gravity = 0.15;
         
-        goal.onclick = () => {
-            shots++;
-            if(Math.random() > 0.4) {
-                goals++;
-                addScore(10);
-                messageDisplay.textContent = '进球! ' + goals + '/' + shots;
-                ball.style.left = Math.random()*180 + 10 + 'px';
-            } else {
-                messageDisplay.textContent = '没进! ' + goals + '/' + shots;
+        function resetBall() {
+            ballX = 190; ballY = 250; ballVX = 0; ballVY = 0;
+            goalkeeper.style.left = '185px';
+        }
+        
+        function update() {
+            if(!isDragging && (ballVX !== 0 || ballVY !== 0)) {
+                ballX += ballVX;
+                ballY += ballVY;
+                ballVY += gravity;
+                
+                if(ballY < 5) {
+                    if(ballX > 100 && ballX < 300) {
+                        const keeperX = parseInt(goalkeeper.style.left);
+                        if(ballX < keeperX || ballX > keeperX + 30) {
+                            goals++;
+                            addScore(10);
+                            messageDisplay.textContent = '进球! ' + goals + '/' + shots;
+                        } else {
+                            messageDisplay.textContent = '被扑出! ' + goals + '/' + shots;
+                        }
+                    } else {
+                        messageDisplay.textContent = '射偏! ' + goals + '/' + shots;
+                    }
+                    setTimeout(resetBall, 500);
+                    ballVX = 0; ballVY = 0;
+                }
+                
+                if(ballX < 0 || ballX > 380) {
+                    ballVX = -ballVX * 0.8;
+                }
+                
+                if(ballY > 280) {
+                    resetBall();
+                }
+                
+                const keeperX = parseInt(goalkeeper.style.left);
+                const targetX = ballX - 15;
+                goalkeeper.style.left = Math.max(100, Math.min(270, keeperX + (targetX - keeperX) * 0.05)) + 'px';
             }
-        };
+            
+            ball.style.left = ballX + 'px';
+            ball.style.top = ballY + 'px';
+        }
         
-        document.querySelector('.game-area').appendChild(goal);
+        field.addEventListener('mousedown', e => {
+            if(ballVX === 0 && ballVY === 0) {
+                isDragging = true;
+                const rect = field.getBoundingClientRect();
+                dragStartX = e.clientX - rect.left;
+                dragStartY = e.clientY - rect.top;
+            }
+        });
+        
+        field.addEventListener('mousemove', e => {
+            if(isDragging) {
+                const rect = field.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                const dx = dragStartX - mouseX;
+                const dy = dragStartY - mouseY;
+                ballX = dragStartX + dx * 0.2;
+                ballY = dragStartY + dy * 0.2;
+            }
+        });
+        
+        field.addEventListener('mouseup', e => {
+            if(isDragging) {
+                isDragging = false;
+                shots++;
+                const rect = field.getBoundingClientRect();
+                const mouseX = e.clientX - rect.left;
+                const mouseY = e.clientY - rect.top;
+                ballVX = (dragStartX - mouseX) * 0.15;
+                ballVY = (dragStartY - mouseY) * 0.15;
+            }
+        });
+        
+        field.addEventListener('mouseleave', () => {
+            if(isDragging) {
+                isDragging = false;
+            }
+        });
+        
+        setInterval(update, 20);
+        document.querySelector('.game-area').appendChild(field);
     
     </script>
 </body>
