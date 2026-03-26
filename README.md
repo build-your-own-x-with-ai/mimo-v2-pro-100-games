@@ -17,7 +17,32 @@
 
 打开 `index.html` 即可浏览所有游戏，支持按分类筛选（益智解谜/纸牌棋盘/动作射击）。
 
+### 🏀 真实游戏截图
+以下为改进后的球类游戏真实截图，点击图片可直接体验游戏。
+
+#### 射箭游戏 (game-055)
+[![射箭游戏截图](screenshots/archery.png)](game-055/index.html)
+*拖拽瞄准，释放射箭，体验真实弓箭物理*
+
+#### 乒乓球游戏 (game-060)
+[![乒乓球游戏截图](screenshots/ping-pong.png)](game-060/index.html)
+*控制球拍回击，球速逐渐增加*
+
+#### 篮球游戏 (game-063)
+[![篮球游戏截图](screenshots/basketball.png)](game-063/index.html)
+*拖拽投篮，体验抛物线物理效果*
+
+#### 足球游戏 (game-062)
+[![足球游戏截图](screenshots/soccer.png)](game-062/index.html)
+*拖拽射门，守门员会自动扑救*
+
+#### 保龄球游戏 (game-057)
+[![保龄球游戏截图](screenshots/bowling.png)](game-057/index.html)
+*点击投球，击倒球瓶得分*
+
 ---
+
+*更多球类游戏截图正在添加中...*
 
 ### 🧩 益智解谜类游戏
 
