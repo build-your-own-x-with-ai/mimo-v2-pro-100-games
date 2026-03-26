@@ -18,31 +18,35 @@
 打开 `index.html` 即可浏览所有游戏，支持按分类筛选（益智解谜/纸牌棋盘/动作射击）。
 
 ### 🏀 真实游戏截图
-以下为改进后的球类游戏真实截图，点击图片可直接体验游戏。
-
-#### 射箭游戏 (game-055)
-[![射箭游戏截图](screenshots/archery.png)](game-055/index.html)
-*拖拽瞄准，释放射箭，体验真实弓箭物理*
+以下为改进后的真实游戏截图，点击图片可直接体验游戏。
 
 #### 乒乓球游戏 (game-060)
 [![乒乓球游戏截图](screenshots/ping-pong.png)](game-060/index.html)
 *控制球拍回击，球速逐渐增加*
 
-#### 篮球游戏 (game-063)
-[![篮球游戏截图](screenshots/basketball.png)](game-063/index.html)
-*拖拽投篮，体验抛物线物理效果*
+#### 连连看游戏 (game-007)
+[![连连看游戏截图](screenshots/lianliankan.png)](game-007/index.html)
+*图案配对，消除所有相同图案*
 
-#### 足球游戏 (game-062)
-[![足球游戏截图](screenshots/soccer.png)](game-062/index.html)
-*拖拽射门，守门员会自动扑救*
+#### 国际象棋 (game-041)
+[![国际象棋截图](screenshots/chess.png)](game-041/index.html)
+*象棋简化版，策略对战*
 
-#### 保龄球游戏 (game-057)
-[![保龄球游戏截图](screenshots/bowling.png)](game-057/index.html)
-*点击投球，击倒球瓶得分*
+#### 宇宙战争 (game-100)
+[![宇宙战争截图](screenshots/war.png)](game-100/index.html)
+*太空射击游戏，消灭敌人*
 
----
+#### 彩虹岛/冒险岛 (game-080/081)
+[![岛屿游戏截图](screenshots/island.png)](game-080/index.html)
+*平台跳跃冒险，探索岛屿*
 
-*更多球类游戏截图正在添加中...*
+#### 小蜜蜂 (game-093)
+[![小蜜蜂游戏截图](screenshots/bee.png)](game-093/index.html)
+*经典射击游戏，击落敌机*
+
+#### 游戏合集展示
+[![游戏合集截图](screenshots/games.png)](index.html)
+*100个JavaScript小游戏集合*
 
 ### 🧩 益智解谜类游戏
 
